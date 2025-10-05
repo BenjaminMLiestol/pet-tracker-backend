@@ -8,14 +8,12 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('users', function (Blueprint $table) {
+        Schema::create('pets', function (Blueprint $table) {
             $table->id();
-            $table->string('email')->unique();
-            $table->string('password');
+            $table->string('name');
+            $table->unsignedInteger('age')->nullable();
             $table->date('date_of_birth')->nullable();
-            $table->string('first_name');
-            $table->string('last_name');
-            $table->rememberToken();
+            $table->string('breed')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });
@@ -23,6 +21,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('users');
+        Schema::dropIfExists('pets');
     }
 };
