@@ -73,4 +73,17 @@ class OwnershipTest extends TestCase
         $this->getJson("/api/feedings?pet_id={$pet->id}&since=2026-05-01")->assertJsonCount(2, 'data');
         $this->getJson("/api/feedings?per_page=9999")->assertUnprocessable();
     }
+
+    public function test_created_pet_belongs_to_creator_and_stays_owned(): void
+    {
+        $me = $this->user('me@test.dev');
+        $other = $this->user('other@test.dev');
+        Sanctum::actingAs($me);
+
+        $id = $this->postJson('/api/pets', ['name' => 'Rex'])->assertCreated()->json('id');
+        $this->getJson('/api/pets')->assertJsonCount(1, 'data');
+
+        $this->patchJson("/api/pets/$id", ['user_ids' => [$other->id]])->assertOk()->assertJsonCount(2, 'users');
+        $this->patchJson("/api/pets/$id", ['user_ids' => []])->assertOk()->assertJsonCount(1, 'users');
+    }
 }

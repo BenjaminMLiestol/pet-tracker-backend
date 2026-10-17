@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Pet;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 
 class PetController extends Controller
 {
@@ -31,10 +32,8 @@ class PetController extends Controller
             'user_ids' => 'nullable|array',
             'user_ids.*' => 'integer|exists:users,id',
         ]);
-        $pet = Pet::create($data);
-        if (! empty($data['user_ids'])) {
-            $pet->users()->sync($data['user_ids']);
-        }
+        $pet = Pet::create(Arr::except($data, 'user_ids'));
+        $pet->users()->sync($this->ownerIds($request, $data['user_ids'] ?? []));
 
         return response()->json($pet->load('users'), 201);
     }
@@ -51,9 +50,9 @@ class PetController extends Controller
             'user_ids' => 'nullable|array',
             'user_ids.*' => 'integer|exists:users,id',
         ]);
-        $pet->update($data);
+        $pet->update(Arr::except($data, 'user_ids'));
         if (array_key_exists('user_ids', $data)) {
-            $pet->users()->sync($data['user_ids'] ?? []);
+            $pet->users()->sync($this->ownerIds($request, $data['user_ids'] ?? []));
         }
 
         return $pet->load('users');
@@ -66,6 +65,12 @@ class PetController extends Controller
         $pet->delete();
 
         return response()->json([], 204);
+    }
+
+    /** The acting user is always an owner, so a pet can never be orphaned. */
+    private function ownerIds(Request $request, array $userIds): array
+    {
+        return array_values(array_unique([...$userIds, $request->user()->id]));
     }
 
     private function authorizePet(Request $request, Pet $pet): void
