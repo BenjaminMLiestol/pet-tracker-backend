@@ -3,30 +3,32 @@
 namespace App\Http\Controllers;
 
 use App\Models\ParasiteTreatment;
+use App\Http\Controllers\Concerns\AuthorizesPetAccess;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 class ParasiteTreatmentController extends Controller
 {
+    use AuthorizesPetAccess;
+
     public function index(Request $request)
     {
         $query = ParasiteTreatment::with(['pet', 'user'])->orderByDesc('given_at');
-        if ($request->has('pet_id')) {
-            $query->where('pet_id', $request->integer('pet_id'));
-        }
+        $this->scopeToUserPets($query, $request);
 
         return $query->paginate(20);
     }
 
-    public function show(ParasiteTreatment $parasiteTreatment)
+    public function show(Request $request, ParasiteTreatment $parasiteTreatment)
     {
+        $this->authorizeRecord($request, $parasiteTreatment);
         return $parasiteTreatment->load(['pet', 'user']);
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
-            'pet_id' => 'required|exists:pets,id',
+            'pet_id' => $this->petIdRule($request),
             'type' => ['required', Rule::in(['flea', 'tick', 'worm'])],
             'product' => 'nullable|string|max:255',
             'given_at' => 'nullable|date',
@@ -41,6 +43,7 @@ class ParasiteTreatmentController extends Controller
 
     public function update(Request $request, ParasiteTreatment $parasiteTreatment)
     {
+        $this->authorizeRecord($request, $parasiteTreatment);
         $data = $request->validate([
             'type' => ['sometimes', Rule::in(['flea', 'tick', 'worm'])],
             'product' => 'nullable|string|max:255',
@@ -53,8 +56,9 @@ class ParasiteTreatmentController extends Controller
         return $parasiteTreatment->load(['pet', 'user']);
     }
 
-    public function destroy(ParasiteTreatment $parasiteTreatment)
+    public function destroy(Request $request, ParasiteTreatment $parasiteTreatment)
     {
+        $this->authorizeRecord($request, $parasiteTreatment);
         $parasiteTreatment->delete();
 
         return response()->json([], 204);

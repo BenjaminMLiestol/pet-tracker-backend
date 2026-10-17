@@ -5,29 +5,31 @@
 namespace App\Http\Controllers;
 
 use App\Models\Weight;
+use App\Http\Controllers\Concerns\AuthorizesPetAccess;
 use Illuminate\Http\Request;
 
 class WeightController extends Controller
 {
+    use AuthorizesPetAccess;
+
     public function index(Request $request)
     {
         $query = Weight::with(['pet', 'user'])->orderByDesc('weighed_at');
-        if ($request->has('pet_id')) {
-            $query->where('pet_id', $request->integer('pet_id'));
-        }
+        $this->scopeToUserPets($query, $request);
 
         return $query->paginate(20);
     }
 
-    public function show(Weight $weight)
+    public function show(Request $request, Weight $weight)
     {
+        $this->authorizeRecord($request, $weight);
         return $weight->load(['pet', 'user']);
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
-            'pet_id' => 'required|exists:pets,id',
+            'pet_id' => $this->petIdRule($request),
             'value' => 'required|numeric',
             'weighed_at' => 'nullable|date',
         ]);
@@ -39,6 +41,7 @@ class WeightController extends Controller
 
     public function update(Request $request, Weight $weight)
     {
+        $this->authorizeRecord($request, $weight);
         $data = $request->validate([
             'value' => 'sometimes|numeric',
             'weighed_at' => 'sometimes|date',
@@ -48,8 +51,9 @@ class WeightController extends Controller
         return $weight->load(['pet', 'user']);
     }
 
-    public function destroy(Weight $weight)
+    public function destroy(Request $request, Weight $weight)
     {
+        $this->authorizeRecord($request, $weight);
         $weight->delete();
 
         return response()->json([], 204);

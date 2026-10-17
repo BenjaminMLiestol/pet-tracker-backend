@@ -12,6 +12,11 @@ class Pet extends Model
 
     protected $fillable = ['name', 'age', 'breed', 'date_of_birth'];
 
+    public function scopeOwnedBy($query, User $user)
+    {
+        return $query->whereHas('users', fn ($q) => $q->where('users.id', $user->id));
+    }
+
     public function users()
     {
         return $this->belongsToMany(User::class)->withTimestamps()->withTrashed();

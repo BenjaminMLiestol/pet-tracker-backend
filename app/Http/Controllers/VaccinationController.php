@@ -3,29 +3,31 @@
 namespace App\Http\Controllers;
 
 use App\Models\Vaccination;
+use App\Http\Controllers\Concerns\AuthorizesPetAccess;
 use Illuminate\Http\Request;
 
 class VaccinationController extends Controller
 {
+    use AuthorizesPetAccess;
+
     public function index(Request $request)
     {
         $query = Vaccination::with(['pet', 'user'])->orderByDesc('given_at');
-        if ($request->has('pet_id')) {
-            $query->where('pet_id', $request->integer('pet_id'));
-        }
+        $this->scopeToUserPets($query, $request);
 
         return $query->paginate(20);
     }
 
-    public function show(Vaccination $vaccination)
+    public function show(Request $request, Vaccination $vaccination)
     {
+        $this->authorizeRecord($request, $vaccination);
         return $vaccination->load(['pet', 'user']);
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
-            'pet_id' => 'required|exists:pets,id',
+            'pet_id' => $this->petIdRule($request),
             'name' => 'required|string|max:255',
             'given_at' => 'nullable|date',
             'next_due_at' => 'nullable|date',
@@ -39,6 +41,7 @@ class VaccinationController extends Controller
 
     public function update(Request $request, Vaccination $vaccination)
     {
+        $this->authorizeRecord($request, $vaccination);
         $data = $request->validate([
             'name' => 'sometimes|string|max:255',
             'given_at' => 'sometimes|date',
@@ -50,8 +53,9 @@ class VaccinationController extends Controller
         return $vaccination->load(['pet', 'user']);
     }
 
-    public function destroy(Vaccination $vaccination)
+    public function destroy(Request $request, Vaccination $vaccination)
     {
+        $this->authorizeRecord($request, $vaccination);
         $vaccination->delete();
 
         return response()->json([], 204);

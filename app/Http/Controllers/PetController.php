@@ -9,13 +9,15 @@ use Illuminate\Http\Request;
 
 class PetController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return Pet::with('users')->paginate(20);
+        return Pet::ownedBy($request->user())->with('users')->paginate(20);
     }
 
-    public function show(Pet $pet)
+    public function show(Request $request, Pet $pet)
     {
+        $this->authorizePet($request, $pet);
+
         return $pet->load('users');
     }
 
@@ -39,6 +41,8 @@ class PetController extends Controller
 
     public function update(Request $request, Pet $pet)
     {
+        $this->authorizePet($request, $pet);
+
         $data = $request->validate([
             'name' => 'sometimes|string',
             'age' => 'sometimes|integer|nullable',
@@ -55,10 +59,17 @@ class PetController extends Controller
         return $pet->load('users');
     }
 
-    public function destroy(Pet $pet)
+    public function destroy(Request $request, Pet $pet)
     {
+        $this->authorizePet($request, $pet);
+
         $pet->delete();
 
         return response()->json([], 204);
+    }
+
+    private function authorizePet(Request $request, Pet $pet): void
+    {
+        abort_unless(Pet::ownedBy($request->user())->whereKey($pet->id)->exists(), 404);
     }
 }

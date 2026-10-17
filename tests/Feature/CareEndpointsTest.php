@@ -14,9 +14,12 @@ class CareEndpointsTest extends TestCase
 
     private function actingPet(): Pet
     {
-        Sanctum::actingAs(User::create(['email' => 'a@b.test', 'password' => 'secret123', 'first_name' => 'A', 'last_name' => 'B']));
+        $user = User::create(['email' => 'a@b.test', 'password' => 'secret123', 'first_name' => 'A', 'last_name' => 'B']);
+        Sanctum::actingAs($user);
+        $pet = Pet::create(['name' => 'Rex']);
+        $pet->users()->attach($user);
 
-        return Pet::create(['name' => 'Rex']);
+        return $pet;
     }
 
     public function test_vet_visit_crud_and_pet_filter(): void
@@ -28,7 +31,8 @@ class CareEndpointsTest extends TestCase
             'pet_id' => $pet->id, 'reason' => 'Checkup',
             'visited_at' => '2026-10-01T10:00:00.000Z', 'next_visit_at' => null, 'notes' => null,
         ])->assertCreated()->json('id');
-        $this->postJson('/api/vet-visits', ['pet_id' => $other->id, 'reason' => 'x'])->assertCreated();
+        $other->users()->attach(User::create(['email' => 'o@b.test', 'password' => 'secret123', 'first_name' => 'O', 'last_name' => 'B']));
+        $this->postJson('/api/vet-visits', ['pet_id' => $other->id, 'reason' => 'x'])->assertUnprocessable();
 
         $this->getJson("/api/vet-visits?pet_id={$pet->id}")->assertOk()->assertJsonCount(1, 'data');
         $this->deleteJson("/api/vet-visits/$id")->assertNoContent();

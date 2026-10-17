@@ -1,0 +1,45 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\Feeding;
+use App\Models\Pet;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
+use Tests\TestCase;
+
+class OwnershipTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private function user(string $email): User
+    {
+        return User::create(['email' => $email, 'password' => 'secret123', 'first_name' => 'T', 'last_name' => 'U']);
+    }
+
+    public function test_user_only_sees_and_touches_own_pets_and_records(): void
+    {
+        $me = $this->user('me@test.dev');
+        $them = $this->user('them@test.dev');
+        $mine = Pet::create(['name' => 'Mine']);
+        $mine->users()->attach($me);
+        $theirs = Pet::create(['name' => 'Theirs']);
+        $theirs->users()->attach($them);
+        $theirFeeding = Feeding::create(['pet_id' => $theirs->id, 'user_id' => $them->id]);
+
+        Sanctum::actingAs($me);
+
+        $this->getJson('/api/pets')->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.name', 'Mine');
+        $this->getJson("/api/pets/{$theirs->id}")->assertNotFound();
+        $this->patchJson("/api/pets/{$theirs->id}", ['name' => 'x'])->assertNotFound();
+        $this->deleteJson("/api/pets/{$theirs->id}")->assertNotFound();
+
+        $this->getJson("/api/feedings?pet_id={$theirs->id}")->assertNotFound();
+        $this->getJson('/api/feedings')->assertOk()->assertJsonCount(0, 'data');
+        $this->getJson("/api/feedings/{$theirFeeding->id}")->assertNotFound();
+        $this->deleteJson("/api/feedings/{$theirFeeding->id}")->assertNotFound();
+        $this->postJson('/api/feedings', ['pet_id' => $theirs->id])->assertUnprocessable();
+        $this->postJson('/api/feedings', ['pet_id' => $mine->id])->assertCreated();
+    }
+}

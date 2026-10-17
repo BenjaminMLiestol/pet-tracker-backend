@@ -3,29 +3,31 @@
 namespace App\Http\Controllers;
 
 use App\Models\VetVisit;
+use App\Http\Controllers\Concerns\AuthorizesPetAccess;
 use Illuminate\Http\Request;
 
 class VetVisitController extends Controller
 {
+    use AuthorizesPetAccess;
+
     public function index(Request $request)
     {
         $query = VetVisit::with(['pet', 'user'])->orderByDesc('visited_at');
-        if ($request->has('pet_id')) {
-            $query->where('pet_id', $request->integer('pet_id'));
-        }
+        $this->scopeToUserPets($query, $request);
 
         return $query->paginate(20);
     }
 
-    public function show(VetVisit $vetVisit)
+    public function show(Request $request, VetVisit $vetVisit)
     {
+        $this->authorizeRecord($request, $vetVisit);
         return $vetVisit->load(['pet', 'user']);
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
-            'pet_id' => 'required|exists:pets,id',
+            'pet_id' => $this->petIdRule($request),
             'reason' => 'required|string|max:255',
             'visited_at' => 'nullable|date',
             'next_visit_at' => 'nullable|date',
@@ -39,6 +41,7 @@ class VetVisitController extends Controller
 
     public function update(Request $request, VetVisit $vetVisit)
     {
+        $this->authorizeRecord($request, $vetVisit);
         $data = $request->validate([
             'reason' => 'sometimes|string|max:255',
             'visited_at' => 'sometimes|date',
@@ -50,8 +53,9 @@ class VetVisitController extends Controller
         return $vetVisit->load(['pet', 'user']);
     }
 
-    public function destroy(VetVisit $vetVisit)
+    public function destroy(Request $request, VetVisit $vetVisit)
     {
+        $this->authorizeRecord($request, $vetVisit);
         $vetVisit->delete();
 
         return response()->json([], 204);
