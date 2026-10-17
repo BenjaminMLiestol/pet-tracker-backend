@@ -42,4 +42,19 @@ class OwnershipTest extends TestCase
         $this->postJson('/api/feedings', ['pet_id' => $theirs->id])->assertUnprocessable();
         $this->postJson('/api/feedings', ['pet_id' => $mine->id])->assertCreated();
     }
+
+    public function test_users_resource_is_gone_and_self_service_works(): void
+    {
+        $me = $this->user('me@test.dev');
+        $other = $this->user('other@test.dev');
+        Sanctum::actingAs($me);
+
+        $this->getJson('/api/users')->assertNotFound();
+        $this->deleteJson("/api/users/{$other->id}")->assertNotFound();
+
+        $this->patchJson('/api/auth/me', ['first_name' => 'New'])->assertOk()->assertJsonPath('first_name', 'New');
+        $this->patchJson('/api/auth/me', ['email' => 'other@test.dev'])->assertUnprocessable();
+        $this->deleteJson('/api/auth/me')->assertNoContent();
+        $this->assertSoftDeleted($me);
+    }
 }

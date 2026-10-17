@@ -5,7 +5,6 @@ use App\Http\Controllers\BathController;
 use App\Http\Controllers\FeedingController;
 use App\Http\Controllers\ParasiteTreatmentController;
 use App\Http\Controllers\PetController;
-use App\Http\Controllers\UserController;
 use App\Http\Controllers\VaccinationController;
 use App\Http\Controllers\VetVisitController;
 use App\Http\Controllers\WalkController;
@@ -19,10 +18,10 @@ Route::prefix('auth')->group(function () {
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('auth/me', [AuthController::class, 'me']);
+    Route::patch('auth/me', [AuthController::class, 'update']);
+    Route::delete('auth/me', [AuthController::class, 'destroy']);
     Route::post('auth/logout', [AuthController::class, 'logout']);
 
-    // Users & Pets CRUD
-    Route::apiResource('users', UserController::class);
     Route::apiResource('pets', PetController::class);
 
     // Activity resources

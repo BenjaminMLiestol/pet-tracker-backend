@@ -54,6 +54,33 @@ class AuthController extends Controller
         return $request->user();
     }
 
+    public function update(Request $request)
+    {
+        $user = $request->user();
+        $data = $request->validate([
+            'email' => ['sometimes', 'email', 'unique:users,email,'.$user->id],
+            'password' => ['sometimes', Password::min(8)],
+            'first_name' => ['sometimes', 'string'],
+            'last_name' => ['sometimes', 'string'],
+            'date_of_birth' => ['nullable', 'date'],
+        ]);
+        if (isset($data['password'])) {
+            $data['password'] = Hash::make($data['password']);
+        }
+        $user->update($data);
+
+        return $user;
+    }
+
+    public function destroy(Request $request)
+    {
+        $user = $request->user();
+        $user->tokens()->delete();
+        $user->delete();
+
+        return response()->json([], 204);
+    }
+
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
