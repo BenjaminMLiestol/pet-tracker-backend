@@ -10,7 +10,7 @@ cp .env.example .env
 php artisan key:generate
 touch database/database.sqlite   # default DB_CONNECTION=sqlite
 php artisan migrate --seed       # seeds users from SEED_USER_* in .env, plus a sample pet
-php artisan serve --host=0.0.0.0 # http://localhost:8000/api
+php artisan serve --host=0.0.0.0 # http://localhost:8000/api/v1
 ```
 
 Seeded users come from `SEED_USER_1_EMAIL`, `SEED_USER_1_PASSWORD`, ... in `.env` (see `.env.example`); no credentials are stored in the repo. A user without a password gets a random one printed once.
@@ -25,14 +25,14 @@ Set `APP_DEBUG=false` and `APP_ENV=production` outside local development.
 
 ## Conventions
 
-- Every `/api` response is JSON, errors included (`{"message": "..."}`): `401` unauthenticated or bad login, `404` not found **or not yours**, `422` validation (`{"message", "errors"}`), `429` throttled.
+- Every `/api/v1` response is JSON, errors included (`{"message": "..."}`): `401` unauthenticated or bad login, `404` not found **or not yours**, `422` validation (`{"message", "errors"}`), `429` throttled.
 - All pet data is scoped to the pets the signed-in user owns. Other users' records answer `404`.
 - Dates are ISO 8601 and stored in UTC. Deletes are soft deletes.
 - Lists are paginated Laravel-style (`{"data": [...], "total": ...}`): `?per_page=1..500` (default 100) and `?since=<date>` (on the resource's date column).
 
 ## Endpoints
 
-All routes are under `/api`; everything except register/login needs `Authorization: Bearer <token>`.
+All routes are under `/api/v1`; everything except register/login needs `Authorization: Bearer <token>`.
 
 ### Auth (register/login throttled to 5 per minute per email + IP)
 

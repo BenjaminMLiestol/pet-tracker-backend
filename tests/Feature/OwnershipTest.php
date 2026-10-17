@@ -30,17 +30,17 @@ class OwnershipTest extends TestCase
 
         Sanctum::actingAs($me);
 
-        $this->getJson('/api/pets')->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.name', 'Mine');
-        $this->getJson("/api/pets/{$theirs->id}")->assertNotFound();
-        $this->patchJson("/api/pets/{$theirs->id}", ['name' => 'x'])->assertNotFound();
-        $this->deleteJson("/api/pets/{$theirs->id}")->assertNotFound();
+        $this->getJson('/api/v1/pets')->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.name', 'Mine');
+        $this->getJson("/api/v1/pets/{$theirs->id}")->assertNotFound();
+        $this->patchJson("/api/v1/pets/{$theirs->id}", ['name' => 'x'])->assertNotFound();
+        $this->deleteJson("/api/v1/pets/{$theirs->id}")->assertNotFound();
 
-        $this->getJson("/api/feedings?pet_id={$theirs->id}")->assertNotFound();
-        $this->getJson('/api/feedings')->assertOk()->assertJsonCount(0, 'data');
-        $this->getJson("/api/feedings/{$theirFeeding->id}")->assertNotFound();
-        $this->deleteJson("/api/feedings/{$theirFeeding->id}")->assertNotFound();
-        $this->postJson('/api/feedings', ['pet_id' => $theirs->id])->assertUnprocessable();
-        $this->postJson('/api/feedings', ['pet_id' => $mine->id])->assertCreated();
+        $this->getJson("/api/v1/feedings?pet_id={$theirs->id}")->assertNotFound();
+        $this->getJson('/api/v1/feedings')->assertOk()->assertJsonCount(0, 'data');
+        $this->getJson("/api/v1/feedings/{$theirFeeding->id}")->assertNotFound();
+        $this->deleteJson("/api/v1/feedings/{$theirFeeding->id}")->assertNotFound();
+        $this->postJson('/api/v1/feedings', ['pet_id' => $theirs->id])->assertUnprocessable();
+        $this->postJson('/api/v1/feedings', ['pet_id' => $mine->id])->assertCreated();
     }
 
     public function test_users_resource_is_gone_and_self_service_works(): void
@@ -49,12 +49,12 @@ class OwnershipTest extends TestCase
         $other = $this->user('other@test.dev');
         Sanctum::actingAs($me);
 
-        $this->getJson('/api/users')->assertNotFound();
-        $this->deleteJson("/api/users/{$other->id}")->assertNotFound();
+        $this->getJson('/api/v1/users')->assertNotFound();
+        $this->deleteJson("/api/v1/users/{$other->id}")->assertNotFound();
 
-        $this->patchJson('/api/auth/me', ['first_name' => 'New'])->assertOk()->assertJsonPath('first_name', 'New');
-        $this->patchJson('/api/auth/me', ['email' => 'other@test.dev'])->assertUnprocessable();
-        $this->deleteJson('/api/auth/me')->assertNoContent();
+        $this->patchJson('/api/v1/auth/me', ['first_name' => 'New'])->assertOk()->assertJsonPath('first_name', 'New');
+        $this->patchJson('/api/v1/auth/me', ['email' => 'other@test.dev'])->assertUnprocessable();
+        $this->deleteJson('/api/v1/auth/me')->assertNoContent();
         $this->assertSoftDeleted($me);
     }
 
@@ -68,10 +68,10 @@ class OwnershipTest extends TestCase
         }
         Sanctum::actingAs($me);
 
-        $this->getJson("/api/feedings?pet_id={$pet->id}")->assertJsonCount(3, 'data');
-        $this->getJson("/api/feedings?pet_id={$pet->id}&per_page=2")->assertJsonCount(2, 'data')->assertJsonPath('total', 3);
-        $this->getJson("/api/feedings?pet_id={$pet->id}&since=2026-05-01")->assertJsonCount(2, 'data');
-        $this->getJson("/api/feedings?per_page=9999")->assertUnprocessable();
+        $this->getJson("/api/v1/feedings?pet_id={$pet->id}")->assertJsonCount(3, 'data');
+        $this->getJson("/api/v1/feedings?pet_id={$pet->id}&per_page=2")->assertJsonCount(2, 'data')->assertJsonPath('total', 3);
+        $this->getJson("/api/v1/feedings?pet_id={$pet->id}&since=2026-05-01")->assertJsonCount(2, 'data');
+        $this->getJson("/api/v1/feedings?per_page=9999")->assertUnprocessable();
     }
 
     public function test_created_pet_belongs_to_creator_and_stays_owned(): void
@@ -80,11 +80,11 @@ class OwnershipTest extends TestCase
         $other = $this->user('other@test.dev');
         Sanctum::actingAs($me);
 
-        $id = $this->postJson('/api/pets', ['name' => 'Rex'])->assertCreated()->json('id');
-        $this->getJson('/api/pets')->assertJsonCount(1, 'data');
+        $id = $this->postJson('/api/v1/pets', ['name' => 'Rex'])->assertCreated()->json('id');
+        $this->getJson('/api/v1/pets')->assertJsonCount(1, 'data');
 
-        $this->patchJson("/api/pets/$id", ['user_ids' => [$other->id]])->assertOk()->assertJsonCount(2, 'users');
-        $this->patchJson("/api/pets/$id", ['user_ids' => []])->assertOk()->assertJsonCount(1, 'users');
+        $this->patchJson("/api/v1/pets/$id", ['user_ids' => [$other->id]])->assertOk()->assertJsonCount(2, 'users');
+        $this->patchJson("/api/v1/pets/$id", ['user_ids' => []])->assertOk()->assertJsonCount(1, 'users');
     }
 
     public function test_deleting_a_pet_soft_deletes_its_records_and_restore_brings_them_back(): void
@@ -95,7 +95,7 @@ class OwnershipTest extends TestCase
         $feeding = Feeding::create(['pet_id' => $pet->id, 'user_id' => $me->id]);
         Sanctum::actingAs($me);
 
-        $this->deleteJson("/api/pets/{$pet->id}")->assertNoContent();
+        $this->deleteJson("/api/v1/pets/{$pet->id}")->assertNoContent();
         $this->assertSoftDeleted($feeding);
 
         $pet->restore();
@@ -107,9 +107,9 @@ class OwnershipTest extends TestCase
         Sanctum::actingAs($this->user('me@test.dev'));
         $dob = now()->subYears(3)->subDays(10)->toDateString();
 
-        $this->postJson('/api/pets', ['name' => 'Rex', 'date_of_birth' => $dob])
+        $this->postJson('/api/v1/pets', ['name' => 'Rex', 'date_of_birth' => $dob])
             ->assertCreated()->assertJsonPath('age', 3);
-        $this->postJson('/api/pets', ['name' => 'NoDob'])->assertCreated()->assertJsonPath('age', null);
+        $this->postJson('/api/v1/pets', ['name' => 'NoDob'])->assertCreated()->assertJsonPath('age', null);
     }
 
     public function test_input_limits(): void
@@ -119,11 +119,11 @@ class OwnershipTest extends TestCase
         $pet->users()->attach($me);
         Sanctum::actingAs($me);
 
-        $this->postJson('/api/weights', ['pet_id' => $pet->id, 'value' => -3])->assertUnprocessable();
-        $this->postJson('/api/weights', ['pet_id' => $pet->id, 'value' => 9000])->assertUnprocessable();
-        $this->postJson('/api/weights', ['pet_id' => $pet->id, 'value' => 12.5])->assertCreated();
-        $this->postJson('/api/pets', ['name' => str_repeat('a', 256)])->assertUnprocessable();
-        $this->postJson('/api/pets', ['name' => 'Future', 'date_of_birth' => now()->addDay()->toDateString()])->assertUnprocessable();
+        $this->postJson('/api/v1/weights', ['pet_id' => $pet->id, 'value' => -3])->assertUnprocessable();
+        $this->postJson('/api/v1/weights', ['pet_id' => $pet->id, 'value' => 9000])->assertUnprocessable();
+        $this->postJson('/api/v1/weights', ['pet_id' => $pet->id, 'value' => 12.5])->assertCreated();
+        $this->postJson('/api/v1/pets', ['name' => str_repeat('a', 256)])->assertUnprocessable();
+        $this->postJson('/api/v1/pets', ['name' => 'Future', 'date_of_birth' => now()->addDay()->toDateString()])->assertUnprocessable();
     }
 
     public function test_explicit_null_date_uses_the_column_default(): void
@@ -133,7 +133,7 @@ class OwnershipTest extends TestCase
         $pet->users()->attach($me);
         Sanctum::actingAs($me);
 
-        $this->postJson('/api/feedings', ['pet_id' => $pet->id, 'fed_at' => null])
+        $this->postJson('/api/v1/feedings', ['pet_id' => $pet->id, 'fed_at' => null])
             ->assertCreated()->assertJsonPath('feed_check', true)->assertJsonPath('fed_at', fn ($v) => $v !== null);
     }
 
@@ -161,20 +161,20 @@ class OwnershipTest extends TestCase
         $theirs->users()->attach($them);
 
         Sanctum::actingAs($them);
-        $theirId = $this->postJson("/api/$path", ['pet_id' => $theirs->id] + $extra)->assertCreated()->json('id');
+        $theirId = $this->postJson("/api/v1/$path", ['pet_id' => $theirs->id] + $extra)->assertCreated()->json('id');
 
         Sanctum::actingAs($me);
-        $this->postJson("/api/$path", ['pet_id' => $theirs->id] + $extra)->assertUnprocessable();
-        $this->postJson("/api/$path", ['pet_id' => $mine->id] + $extra)->assertCreated();
-        $this->getJson("/api/$path")->assertOk()->assertJsonCount(1, 'data');
-        $this->getJson("/api/$path/$theirId")->assertNotFound();
-        $this->patchJson("/api/$path/$theirId", [])->assertNotFound();
-        $this->deleteJson("/api/$path/$theirId")->assertNotFound();
+        $this->postJson("/api/v1/$path", ['pet_id' => $theirs->id] + $extra)->assertUnprocessable();
+        $this->postJson("/api/v1/$path", ['pet_id' => $mine->id] + $extra)->assertCreated();
+        $this->getJson("/api/v1/$path")->assertOk()->assertJsonCount(1, 'data');
+        $this->getJson("/api/v1/$path/$theirId")->assertNotFound();
+        $this->patchJson("/api/v1/$path/$theirId", [])->assertNotFound();
+        $this->deleteJson("/api/v1/$path/$theirId")->assertNotFound();
 
         Sanctum::actingAs($them);
-        $this->getJson("/api/$path/$theirId")->assertOk();
-        $this->deleteJson("/api/$path/$theirId")->assertNoContent();
-        $this->getJson("/api/$path/$theirId")->assertNotFound();
+        $this->getJson("/api/v1/$path/$theirId")->assertOk();
+        $this->deleteJson("/api/v1/$path/$theirId")->assertNoContent();
+        $this->getJson("/api/v1/$path/$theirId")->assertNotFound();
     }
 
     public function test_records_do_not_embed_user_or_pet(): void
@@ -184,11 +184,11 @@ class OwnershipTest extends TestCase
         $pet->users()->attach($me);
         Sanctum::actingAs($me);
 
-        $created = $this->postJson('/api/feedings', ['pet_id' => $pet->id])->assertCreated()->json();
+        $created = $this->postJson('/api/v1/feedings', ['pet_id' => $pet->id])->assertCreated()->json();
         $this->assertArrayNotHasKey('user', $created);
         $this->assertArrayNotHasKey('pet', $created);
 
-        $row = $this->getJson("/api/feedings?pet_id={$pet->id}")->json('data.0');
+        $row = $this->getJson("/api/v1/feedings?pet_id={$pet->id}")->json('data.0');
         $this->assertArrayNotHasKey('user', $row);
         $this->assertArrayNotHasKey('pet', $row);
         $this->assertStringNotContainsString('me@test.dev', json_encode($row));

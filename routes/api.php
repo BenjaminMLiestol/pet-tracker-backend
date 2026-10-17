@@ -11,27 +11,31 @@ use App\Http\Controllers\WalkController;
 use App\Http\Controllers\WeightController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('auth')->middleware('throttle:auth')->group(function () {
-    Route::post('register', [AuthController::class, 'register']);
-    Route::post('login', [AuthController::class, 'login']);
-});
+// Versioned API: every route lives under /api/v1 so older app builds keep working
+// when a future /api/v2 changes the contract.
+Route::prefix('v1')->group(function () {
+    Route::prefix('auth')->middleware('throttle:auth')->group(function () {
+        Route::post('register', [AuthController::class, 'register']);
+        Route::post('login', [AuthController::class, 'login']);
+    });
 
-Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
-    Route::get('auth/me', [AuthController::class, 'me']);
-    Route::patch('auth/me', [AuthController::class, 'update']);
-    Route::delete('auth/me', [AuthController::class, 'destroy']);
-    Route::post('auth/logout', [AuthController::class, 'logout']);
+    Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
+        Route::get('auth/me', [AuthController::class, 'me']);
+        Route::patch('auth/me', [AuthController::class, 'update']);
+        Route::delete('auth/me', [AuthController::class, 'destroy']);
+        Route::post('auth/logout', [AuthController::class, 'logout']);
 
-    Route::apiResource('pets', PetController::class);
+        Route::apiResource('pets', PetController::class);
 
-    // Activity resources
-    Route::apiResource('feedings', FeedingController::class);
-    Route::apiResource('walks', WalkController::class);
-    Route::apiResource('baths', BathController::class);
-    Route::apiResource('weights', WeightController::class);
+        // Activity resources
+        Route::apiResource('feedings', FeedingController::class);
+        Route::apiResource('walks', WalkController::class);
+        Route::apiResource('baths', BathController::class);
+        Route::apiResource('weights', WeightController::class);
 
-    // Care resources
-    Route::apiResource('vet-visits', VetVisitController::class);
-    Route::apiResource('vaccinations', VaccinationController::class);
-    Route::apiResource('parasite-treatments', ParasiteTreatmentController::class);
+        // Care resources
+        Route::apiResource('vet-visits', VetVisitController::class);
+        Route::apiResource('vaccinations', VaccinationController::class);
+        Route::apiResource('parasite-treatments', ParasiteTreatmentController::class);
+    });
 });
