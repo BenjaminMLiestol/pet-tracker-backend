@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
@@ -22,6 +23,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Keep the JSON flat ({...}, not {"data": {...}}) so existing clients are unaffected.
+        JsonResource::withoutWrapping();
+
         // General limit for authenticated API traffic: 120 requests/minute per user.
         RateLimiter::for('api', fn (Request $request) => Limit::perMinute(120)
             ->by($request->user()?->id ?: $request->ip()));

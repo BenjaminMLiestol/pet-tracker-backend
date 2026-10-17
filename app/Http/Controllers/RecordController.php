@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\AuthorizesPetAccess;
+use App\Http\Resources\RecordResource;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 
@@ -31,12 +32,13 @@ abstract class RecordController extends Controller
         $query = $this->model()::query()->orderByDesc($this->dateColumn());
         $this->scopeToUserPets($query, $request);
 
-        return $this->paginateRecords($query, $request, $this->dateColumn());
+        return $this->paginateRecords($query, $request, $this->dateColumn())
+            ->through(fn ($record) => new RecordResource($record));
     }
 
     public function show(Request $request, int $id)
     {
-        return $this->find($request, $id);
+        return new RecordResource($this->find($request, $id));
     }
 
     public function store(Request $request)
@@ -50,7 +52,7 @@ abstract class RecordController extends Controller
 
         $record = $this->model()::create($data);
 
-        return response()->json($record->fresh(), 201);
+        return (new RecordResource($record->fresh()))->response()->setStatusCode(201);
     }
 
     public function update(Request $request, int $id)
@@ -58,7 +60,7 @@ abstract class RecordController extends Controller
         $record = $this->find($request, $id);
         $record->update($request->validate($this->updateRules($request, $record)));
 
-        return $record;
+        return new RecordResource($record);
     }
 
     public function destroy(Request $request, int $id)

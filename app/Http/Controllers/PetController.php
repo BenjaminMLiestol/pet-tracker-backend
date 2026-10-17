@@ -4,6 +4,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\PetResource;
 use App\Models\Pet;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -12,14 +13,15 @@ class PetController extends Controller
 {
     public function index(Request $request)
     {
-        return Pet::ownedBy($request->user())->with('users')->paginate(20);
+        return Pet::ownedBy($request->user())->with('users')->paginate(20)
+            ->through(fn ($pet) => new PetResource($pet));
     }
 
     public function show(Request $request, Pet $pet)
     {
         $this->authorizePet($request, $pet);
 
-        return $pet->load('users');
+        return new PetResource($pet->load('users'));
     }
 
     public function store(Request $request)
@@ -34,7 +36,7 @@ class PetController extends Controller
         $pet = Pet::create(Arr::except($data, 'user_ids'));
         $pet->users()->sync($this->ownerIds($request, $data['user_ids'] ?? []));
 
-        return response()->json($pet->load('users'), 201);
+        return (new PetResource($pet->load('users')))->response()->setStatusCode(201);
     }
 
     public function update(Request $request, Pet $pet)
@@ -53,7 +55,7 @@ class PetController extends Controller
             $pet->users()->sync($this->ownerIds($request, $data['user_ids'] ?? []));
         }
 
-        return $pet->load('users');
+        return new PetResource($pet->load('users'));
     }
 
     public function destroy(Request $request, Pet $pet)

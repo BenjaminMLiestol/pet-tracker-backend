@@ -193,4 +193,23 @@ class OwnershipTest extends TestCase
         $this->assertArrayNotHasKey('pet', $row);
         $this->assertStringNotContainsString('me@test.dev', json_encode($row));
     }
+
+    public function test_pet_json_is_flat_and_hides_co_owner_details(): void
+    {
+        $me = $this->user('me@test.dev');
+        $other = $this->user('other@test.dev');
+        Sanctum::actingAs($me);
+
+        $json = $this->postJson('/api/v1/pets', ['name' => 'Rex', 'date_of_birth' => '2021-10-30', 'user_ids' => [$other->id]])
+            ->assertCreated()
+            ->assertJsonPath('name', 'Rex')
+            ->assertJsonPath('date_of_birth', '2021-10-30')
+            ->assertJsonCount(2, 'users')
+            ->json();
+
+        $this->assertArrayNotHasKey('data', $json);
+        $this->assertArrayNotHasKey('deleted_at', $json);
+        $this->assertStringNotContainsString('other@test.dev', json_encode($json));
+        $this->assertSame(['id', 'first_name', 'last_name'], array_keys($json['users'][0]));
+    }
 }

@@ -25,6 +25,6 @@ class User extends Authenticatable
 
     public function pets()
     {
-        return $this->belongsToMany(Pet::class)->withTimestamps()->withTrashed();
+        return $this->belongsToMany(Pet::class)->withTimestamps();
     }
 }

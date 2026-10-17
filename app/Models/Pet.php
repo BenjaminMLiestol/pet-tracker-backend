@@ -51,7 +51,7 @@ class Pet extends Model
 
     public function users()
     {
-        return $this->belongsToMany(User::class)->withTimestamps()->withTrashed();
+        return $this->belongsToMany(User::class)->withTimestamps();
     }
 
     public function feedings()
