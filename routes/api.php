@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BathController;
+use App\Http\Controllers\DeviceTokenController;
 use App\Http\Controllers\FeedingController;
 use App\Http\Controllers\ParasiteTreatmentController;
 use App\Http\Controllers\PetController;
@@ -26,6 +27,10 @@ Route::prefix('v1')->group(function () {
         Route::patch('auth/me', [AuthController::class, 'update']);
         Route::delete('auth/me', [AuthController::class, 'destroy']);
         Route::post('auth/logout', [AuthController::class, 'logout']);
+
+        // Push notifications: this phone's Expo token.
+        Route::post('devices', [DeviceTokenController::class, 'store']);
+        Route::delete('devices', [DeviceTokenController::class, 'destroy']);
 
         Route::apiResource('pets', PetController::class);
 

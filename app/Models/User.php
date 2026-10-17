@@ -14,12 +14,14 @@ class User extends Authenticatable
 
     protected $fillable = [
         'email', 'password', 'date_of_birth', 'first_name', 'last_name',
-        'feeding_reminder_time', 'walk_reminder_time',
+        'feeding_reminder_time', 'walk_reminder_time', 'notify_co_owners', 'locale',
     ];
 
     protected $attributes = [
         'feeding_reminder_time' => '18:00',
         'walk_reminder_time' => '19:00',
+        'notify_co_owners' => true,
+        'locale' => 'nb',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -27,7 +29,13 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'date_of_birth' => 'date',
+        'notify_co_owners' => 'boolean',
     ];
+
+    public function deviceTokens()
+    {
+        return $this->hasMany(DeviceToken::class);
+    }
 
     public function pets()
     {

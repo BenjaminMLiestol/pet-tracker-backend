@@ -27,6 +27,9 @@ abstract class RecordController extends Controller
     /** Validation rules for PATCH/PUT. */
     abstract protected function updateRules(Request $request, Model $record): array;
 
+    /** Runs once a record has been created. Subclasses use it for side effects (pushes). */
+    protected function created(Model $record, Request $request): void {}
+
     public function index(Request $request)
     {
         $query = $this->model()::query()->orderByDesc($this->dateColumn());
@@ -50,9 +53,11 @@ abstract class RecordController extends Controller
             unset($data[$this->dateColumn()]);
         }
 
-        $record = $this->model()::create($data);
+        // Re-read so column defaults (an omitted date means now) are filled in.
+        $record = $this->model()::create($data)->fresh();
+        $this->created($record, $request);
 
-        return (new RecordResource($record->fresh()))->response()->setStatusCode(201);
+        return (new RecordResource($record))->response()->setStatusCode(201);
     }
 
     public function update(Request $request, int $id)

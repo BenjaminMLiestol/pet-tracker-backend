@@ -66,6 +66,8 @@ class AuthController extends Controller
             // When to be reminded, 24h "HH:MM". Personal: co-owners can differ.
             'feeding_reminder_time' => ['sometimes', 'date_format:H:i'],
             'walk_reminder_time' => ['sometimes', 'date_format:H:i'],
+            'notify_co_owners' => ['sometimes', 'boolean'],
+            'locale' => ['sometimes', 'in:nb,en'],
         ]);
         if (isset($data['password'])) {
             $data['password'] = Hash::make($data['password']);

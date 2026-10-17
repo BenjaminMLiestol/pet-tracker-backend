@@ -79,6 +79,20 @@ Each supports `GET /x` (`?pet_id=`, `?since=`, `?per_page=`), `POST /x`, `GET|PA
 
 `next_*` dates may not fall on an earlier day than the visit/treatment date.
 
+## Push notifications
+
+Co-owners are told when someone logs a feeding or a walk ("Benjamin fed Toya"). The app sends
+its Expo push token to `POST /api/v1/devices` and removes it on logout with
+`DELETE /api/v1/devices` (body `{"token": ...}`). Pushes go through Expo's relay
+(`services.expo`), after the response, and never fail the request that caused them. Dead tokens
+(`DeviceNotRegistered`) are deleted.
+
+- Nobody is pinged for their own action, for entries logged more than 10 minutes in the past
+  (corrections, undo), or when they turned off `notify_co_owners` on their profile.
+- The message language follows the receiver's `locale` (`nb` or `en`), set with `PATCH /auth/me`.
+- Delivery needs the app built with push enabled (a paid Apple Developer account for iOS) and an
+  EAS project id; `EXPO_ACCESS_TOKEN` is only needed if enhanced push security is on.
+
 ## Adding a per-pet resource
 
 Create a migration (with `pet_id`, `user_id`, soft deletes), a model, and a controller extending `RecordController` that declares `model()`, `dateColumn()`, `storeRules()` and `updateRules()`; register it with `Route::apiResource`, and add the relation to `Pet::CASCADE` so pet deletes cascade.
