@@ -212,4 +212,15 @@ class OwnershipTest extends TestCase
         $this->assertStringNotContainsString('other@test.dev', json_encode($json));
         $this->assertSame(['id', 'first_name', 'last_name'], array_keys($json['users'][0]));
     }
+
+    public function test_pet_timezone_defaults_and_is_validated(): void
+    {
+        Sanctum::actingAs($this->user('me@test.dev'));
+
+        $id = $this->postJson('/api/v1/pets', ['name' => 'Rex'])->assertCreated()
+            ->assertJsonPath('timezone', 'Europe/Oslo')->json('id');
+        $this->patchJson("/api/v1/pets/$id", ['timezone' => 'America/New_York'])
+            ->assertOk()->assertJsonPath('timezone', 'America/New_York');
+        $this->patchJson("/api/v1/pets/$id", ['timezone' => 'Mars/Olympus'])->assertUnprocessable();
+    }
 }

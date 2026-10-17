@@ -29,6 +29,7 @@ class PetController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'breed' => 'nullable|string|max:255',
+            'timezone' => 'sometimes|timezone:all',
             'date_of_birth' => 'nullable|date|before_or_equal:today',
             'user_ids' => 'nullable|array',
             'user_ids.*' => 'integer|exists:users,id',
@@ -46,6 +47,7 @@ class PetController extends Controller
         $data = $request->validate([
             'name' => 'sometimes|string|max:255',
             'breed' => 'sometimes|string|nullable|max:255',
+            'timezone' => 'sometimes|timezone:all',
             'date_of_birth' => 'nullable|date|before_or_equal:today',
             'user_ids' => 'nullable|array',
             'user_ids.*' => 'integer|exists:users,id',

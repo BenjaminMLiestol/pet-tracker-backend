@@ -13,6 +13,7 @@ class PetResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'breed' => $this->breed,
+            'timezone' => $this->timezone,
             'date_of_birth' => $this->date_of_birth?->toDateString(),
             'age' => $this->age,
             // Co-owners are shown by name only; emails and birth dates stay private.

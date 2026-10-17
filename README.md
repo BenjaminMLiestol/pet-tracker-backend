@@ -49,7 +49,7 @@ All routes are under `/api/v1`; everything except register/login needs `Authoriz
 
 `GET|POST /pets`, `GET|PATCH|DELETE /pets/{id}`
 
-Fields: `name` (required), `breed?`, `date_of_birth?`, `user_ids?` (extra owners; you are always an owner). `age` is read-only, derived from `date_of_birth`. Deleting a pet also soft-deletes its records.
+Fields: `name` (required), `breed?`, `timezone?` (IANA, default `Europe/Oslo`; decides where "today" starts), `date_of_birth?`, `user_ids?` (extra owners; you are always an owner). `age` is read-only, derived from `date_of_birth`. Deleting a pet also soft-deletes its records.
 
 ### Per-pet records
 

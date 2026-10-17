@@ -32,11 +32,13 @@ class Pet extends Model
         });
     }
 
+    protected $attributes = ['timezone' => 'Europe/Oslo'];
+
     protected $appends = ['age'];
 
     protected $casts = ['date_of_birth' => 'date'];
 
-    protected $fillable = ['name', 'breed', 'date_of_birth'];
+    protected $fillable = ['name', 'breed', 'timezone', 'date_of_birth'];
 
     /** Age in whole years, derived from date_of_birth. */
     protected function age(): Attribute
