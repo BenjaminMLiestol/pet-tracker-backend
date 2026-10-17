@@ -10,6 +10,27 @@ class Pet extends Model
 {
     use HasFactory, SoftDeletes;
 
+    /** Relations whose records are soft-deleted together with the pet. */
+    private const CASCADE = ['feedings', 'walks', 'baths', 'weights', 'vetVisits', 'vaccinations', 'parasiteTreatments'];
+
+    protected static function booted(): void
+    {
+        static::deleting(function (Pet $pet) {
+            if ($pet->isForceDeleting()) {
+                return; // DB foreign keys cascade hard deletes
+            }
+            foreach (self::CASCADE as $relation) {
+                $pet->{$relation}()->delete();
+            }
+        });
+
+        static::restoring(function (Pet $pet) {
+            foreach (self::CASCADE as $relation) {
+                $pet->{$relation}()->onlyTrashed()->restore();
+            }
+        });
+    }
+
     protected $fillable = ['name', 'age', 'breed', 'date_of_birth'];
 
     public function scopeOwnedBy($query, User $user)

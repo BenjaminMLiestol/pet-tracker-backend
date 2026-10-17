@@ -86,4 +86,19 @@ class OwnershipTest extends TestCase
         $this->patchJson("/api/pets/$id", ['user_ids' => [$other->id]])->assertOk()->assertJsonCount(2, 'users');
         $this->patchJson("/api/pets/$id", ['user_ids' => []])->assertOk()->assertJsonCount(1, 'users');
     }
+
+    public function test_deleting_a_pet_soft_deletes_its_records_and_restore_brings_them_back(): void
+    {
+        $me = $this->user('me@test.dev');
+        $pet = Pet::create(['name' => 'Rex']);
+        $pet->users()->attach($me);
+        $feeding = Feeding::create(['pet_id' => $pet->id, 'user_id' => $me->id]);
+        Sanctum::actingAs($me);
+
+        $this->deleteJson("/api/pets/{$pet->id}")->assertNoContent();
+        $this->assertSoftDeleted($feeding);
+
+        $pet->restore();
+        $this->assertNotSoftDeleted($feeding);
+    }
 }
