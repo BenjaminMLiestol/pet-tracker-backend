@@ -36,4 +36,19 @@ class Pet extends Model
     {
         return $this->hasMany(Weight::class);
     }
+
+    public function vetVisits()
+    {
+        return $this->hasMany(VetVisit::class);
+    }
+
+    public function vaccinations()
+    {
+        return $this->hasMany(Vaccination::class);
+    }
+
+    public function parasiteTreatments()
+    {
+        return $this->hasMany(ParasiteTreatment::class);
+    }
 }

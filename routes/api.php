@@ -3,8 +3,11 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BathController;
 use App\Http\Controllers\FeedingController;
+use App\Http\Controllers\ParasiteTreatmentController;
 use App\Http\Controllers\PetController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\VaccinationController;
+use App\Http\Controllers\VetVisitController;
 use App\Http\Controllers\WalkController;
 use App\Http\Controllers\WeightController;
 use Illuminate\Support\Facades\Route;
@@ -27,4 +30,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('walks', WalkController::class);
     Route::apiResource('baths', BathController::class);
     Route::apiResource('weights', WeightController::class);
+
+    // Care resources
+    Route::apiResource('vet-visits', VetVisitController::class);
+    Route::apiResource('vaccinations', VaccinationController::class);
+    Route::apiResource('parasite-treatments', ParasiteTreatmentController::class);
 });

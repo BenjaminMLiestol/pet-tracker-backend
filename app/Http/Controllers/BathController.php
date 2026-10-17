@@ -45,4 +45,11 @@ class BathController extends Controller
 
         return $bath->load(['pet', 'user']);
     }
+
+    public function destroy(Bath $bath)
+    {
+        $bath->delete();
+
+        return response()->json([], 204);
+    }
 }
