@@ -26,7 +26,6 @@ class PetController extends Controller
     {
         $data = $request->validate([
             'name' => 'required|string',
-            'age' => 'nullable|integer',
             'breed' => 'nullable|string',
             'date_of_birth' => 'nullable|date',
             'user_ids' => 'nullable|array',
@@ -44,7 +43,6 @@ class PetController extends Controller
 
         $data = $request->validate([
             'name' => 'sometimes|string',
-            'age' => 'sometimes|integer|nullable',
             'breed' => 'sometimes|string|nullable',
             'date_of_birth' => 'nullable|date',
             'user_ids' => 'nullable|array',

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -31,7 +32,17 @@ class Pet extends Model
         });
     }
 
-    protected $fillable = ['name', 'age', 'breed', 'date_of_birth'];
+    protected $appends = ['age'];
+
+    protected $casts = ['date_of_birth' => 'date'];
+
+    protected $fillable = ['name', 'breed', 'date_of_birth'];
+
+    /** Age in whole years, derived from date_of_birth. */
+    protected function age(): Attribute
+    {
+        return Attribute::get(fn () => $this->date_of_birth?->age);
+    }
 
     public function scopeOwnedBy($query, User $user)
     {

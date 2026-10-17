@@ -13,7 +13,6 @@ class PetSeeder extends Seeder
         Pet::updateOrCreate(
             ['name' => 'Toya'],
             [
-                'age' => 4,
                 'breed' => 'Finnish lappdog',
                 'date_of_birth' => '2021-10-30',
             ]

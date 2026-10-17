@@ -101,4 +101,14 @@ class OwnershipTest extends TestCase
         $pet->restore();
         $this->assertNotSoftDeleted($feeding);
     }
+
+    public function test_pet_age_is_derived_from_date_of_birth(): void
+    {
+        Sanctum::actingAs($this->user('me@test.dev'));
+        $dob = now()->subYears(3)->subDays(10)->toDateString();
+
+        $this->postJson('/api/pets', ['name' => 'Rex', 'date_of_birth' => $dob])
+            ->assertCreated()->assertJsonPath('age', 3);
+        $this->postJson('/api/pets', ['name' => 'NoDob'])->assertCreated()->assertJsonPath('age', null);
+    }
 }
