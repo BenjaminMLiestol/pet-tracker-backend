@@ -136,4 +136,44 @@ class OwnershipTest extends TestCase
         $this->postJson('/api/feedings', ['pet_id' => $pet->id, 'fed_at' => null])
             ->assertCreated()->assertJsonPath('feed_check', true)->assertJsonPath('fed_at', fn ($v) => $v !== null);
     }
+
+    public static function resources(): array
+    {
+        return [
+            'feedings' => ['feedings', []],
+            'walks' => ['walks', []],
+            'baths' => ['baths', []],
+            'weights' => ['weights', ['value' => 10]],
+            'vet-visits' => ['vet-visits', ['reason' => 'Checkup']],
+            'vaccinations' => ['vaccinations', ['name' => 'Rabies']],
+            'parasite-treatments' => ['parasite-treatments', ['type' => 'flea']],
+        ];
+    }
+
+    /** @dataProvider resources */
+    public function test_every_record_endpoint_is_ownership_scoped(string $path, array $extra): void
+    {
+        $me = $this->user('me@test.dev');
+        $them = $this->user('them@test.dev');
+        $mine = Pet::create(['name' => 'Mine']);
+        $mine->users()->attach($me);
+        $theirs = Pet::create(['name' => 'Theirs']);
+        $theirs->users()->attach($them);
+
+        Sanctum::actingAs($them);
+        $theirId = $this->postJson("/api/$path", ['pet_id' => $theirs->id] + $extra)->assertCreated()->json('id');
+
+        Sanctum::actingAs($me);
+        $this->postJson("/api/$path", ['pet_id' => $theirs->id] + $extra)->assertUnprocessable();
+        $this->postJson("/api/$path", ['pet_id' => $mine->id] + $extra)->assertCreated();
+        $this->getJson("/api/$path")->assertOk()->assertJsonCount(1, 'data');
+        $this->getJson("/api/$path/$theirId")->assertNotFound();
+        $this->patchJson("/api/$path/$theirId", [])->assertNotFound();
+        $this->deleteJson("/api/$path/$theirId")->assertNotFound();
+
+        Sanctum::actingAs($them);
+        $this->getJson("/api/$path/$theirId")->assertOk();
+        $this->deleteJson("/api/$path/$theirId")->assertNoContent();
+        $this->getJson("/api/$path/$theirId")->assertNotFound();
+    }
 }

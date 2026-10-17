@@ -45,4 +45,32 @@ class AuthTest extends TestCase
         $this->assertSame('Not found', $missing->json('message'));
         $this->assertSame(404, $this->call('GET', '/api/nope')->getStatusCode());
     }
+
+    public function test_register_validates_and_returns_user_and_token(): void
+    {
+        $this->postJson('/api/auth/register', [])->assertUnprocessable()
+            ->assertJsonValidationErrors(['email', 'password', 'first_name', 'last_name']);
+        $this->postJson('/api/auth/register', ['email' => 'a@b.test', 'password' => 'short', 'first_name' => 'A', 'last_name' => 'B'])
+            ->assertUnprocessable()->assertJsonValidationErrors('password');
+
+        $payload = ['email' => 'a@b.test', 'password' => 'secret123', 'first_name' => 'A', 'last_name' => 'B'];
+        $this->postJson('/api/auth/register', $payload)->assertCreated()
+            ->assertJsonStructure(['user' => ['id', 'email'], 'token'])
+            ->assertJsonMissingPath('user.password');
+        $this->postJson('/api/auth/register', $payload)->assertUnprocessable()->assertJsonValidationErrors('email');
+    }
+
+    public function test_me_and_logout_use_the_issued_token(): void
+    {
+        $token = $this->postJson('/api/auth/register', [
+            'email' => 'a@b.test', 'password' => 'secret123', 'first_name' => 'A', 'last_name' => 'B',
+        ])->json('token');
+
+        $this->withToken($token)->getJson('/api/auth/me')->assertOk()->assertJsonPath('email', 'a@b.test');
+        $this->withToken($token)->postJson('/api/auth/logout')->assertOk();
+
+        // The guard caches the resolved user within one app instance.
+        $this->app['auth']->forgetGuards();
+        $this->withToken($token)->getJson('/api/auth/me')->assertUnauthorized();
+    }
 }
