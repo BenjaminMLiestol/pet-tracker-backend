@@ -176,4 +176,21 @@ class OwnershipTest extends TestCase
         $this->deleteJson("/api/$path/$theirId")->assertNoContent();
         $this->getJson("/api/$path/$theirId")->assertNotFound();
     }
+
+    public function test_records_do_not_embed_user_or_pet(): void
+    {
+        $me = $this->user('me@test.dev');
+        $pet = Pet::create(['name' => 'Mine']);
+        $pet->users()->attach($me);
+        Sanctum::actingAs($me);
+
+        $created = $this->postJson('/api/feedings', ['pet_id' => $pet->id])->assertCreated()->json();
+        $this->assertArrayNotHasKey('user', $created);
+        $this->assertArrayNotHasKey('pet', $created);
+
+        $row = $this->getJson("/api/feedings?pet_id={$pet->id}")->json('data.0');
+        $this->assertArrayNotHasKey('user', $row);
+        $this->assertArrayNotHasKey('pet', $row);
+        $this->assertStringNotContainsString('me@test.dev', json_encode($row));
+    }
 }

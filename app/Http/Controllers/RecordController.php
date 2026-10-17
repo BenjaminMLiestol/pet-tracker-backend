@@ -28,7 +28,7 @@ abstract class RecordController extends Controller
 
     public function index(Request $request)
     {
-        $query = $this->model()::with(['pet', 'user'])->orderByDesc($this->dateColumn());
+        $query = $this->model()::query()->orderByDesc($this->dateColumn());
         $this->scopeToUserPets($query, $request);
 
         return $this->paginateRecords($query, $request, $this->dateColumn());
@@ -36,7 +36,7 @@ abstract class RecordController extends Controller
 
     public function show(Request $request, int $id)
     {
-        return $this->find($request, $id)->load(['pet', 'user']);
+        return $this->find($request, $id);
     }
 
     public function store(Request $request)
@@ -50,7 +50,7 @@ abstract class RecordController extends Controller
 
         $record = $this->model()::create($data);
 
-        return response()->json($record->fresh()->load(['pet', 'user']), 201);
+        return response()->json($record->fresh(), 201);
     }
 
     public function update(Request $request, int $id)
@@ -58,7 +58,7 @@ abstract class RecordController extends Controller
         $record = $this->find($request, $id);
         $record->update($request->validate($this->updateRules($request, $record)));
 
-        return $record->load(['pet', 'user']);
+        return $record;
     }
 
     public function destroy(Request $request, int $id)
