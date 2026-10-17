@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Concerns;
 
 use App\Models\Pet;
-use Illuminate\Database\Eloquent\Builder;
 use Carbon\Carbon;
 use Closure;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;

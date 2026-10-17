@@ -71,7 +71,7 @@ class OwnershipTest extends TestCase
         $this->getJson("/api/v1/feedings?pet_id={$pet->id}")->assertJsonCount(3, 'data');
         $this->getJson("/api/v1/feedings?pet_id={$pet->id}&per_page=2")->assertJsonCount(2, 'data')->assertJsonPath('total', 3);
         $this->getJson("/api/v1/feedings?pet_id={$pet->id}&since=2026-05-01")->assertJsonCount(2, 'data');
-        $this->getJson("/api/v1/feedings?per_page=9999")->assertUnprocessable();
+        $this->getJson('/api/v1/feedings?per_page=9999')->assertUnprocessable();
     }
 
     public function test_created_pet_belongs_to_creator_and_stays_owned(): void
