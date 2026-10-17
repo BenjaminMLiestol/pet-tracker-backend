@@ -17,7 +17,7 @@ class WeightController extends Controller
         $query = Weight::with(['pet', 'user'])->orderByDesc('weighed_at');
         $this->scopeToUserPets($query, $request);
 
-        return $query->paginate(20);
+        return $this->paginateRecords($query, $request, 'weighed_at');
     }
 
     public function show(Request $request, Weight $weight)

@@ -15,7 +15,7 @@ class VaccinationController extends Controller
         $query = Vaccination::with(['pet', 'user'])->orderByDesc('given_at');
         $this->scopeToUserPets($query, $request);
 
-        return $query->paginate(20);
+        return $this->paginateRecords($query, $request, 'given_at');
     }
 
     public function show(Request $request, Vaccination $vaccination)

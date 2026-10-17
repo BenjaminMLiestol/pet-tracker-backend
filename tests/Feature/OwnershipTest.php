@@ -57,4 +57,20 @@ class OwnershipTest extends TestCase
         $this->deleteJson('/api/auth/me')->assertNoContent();
         $this->assertSoftDeleted($me);
     }
+
+    public function test_lists_support_per_page_and_since(): void
+    {
+        $me = $this->user('me@test.dev');
+        $pet = Pet::create(['name' => 'Mine']);
+        $pet->users()->attach($me);
+        foreach (['2026-01-01', '2026-06-01', '2026-10-01'] as $d) {
+            Feeding::create(['pet_id' => $pet->id, 'user_id' => $me->id, 'fed_at' => $d]);
+        }
+        Sanctum::actingAs($me);
+
+        $this->getJson("/api/feedings?pet_id={$pet->id}")->assertJsonCount(3, 'data');
+        $this->getJson("/api/feedings?pet_id={$pet->id}&per_page=2")->assertJsonCount(2, 'data')->assertJsonPath('total', 3);
+        $this->getJson("/api/feedings?pet_id={$pet->id}&since=2026-05-01")->assertJsonCount(2, 'data');
+        $this->getJson("/api/feedings?per_page=9999")->assertUnprocessable();
+    }
 }

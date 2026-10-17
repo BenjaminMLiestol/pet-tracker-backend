@@ -17,7 +17,7 @@ class WalkController extends Controller
         $query = Walk::with(['pet', 'user'])->orderByDesc('walked_at');
         $this->scopeToUserPets($query, $request);
 
-        return $query->paginate(20);
+        return $this->paginateRecords($query, $request, 'walked_at');
     }
 
     public function show(Request $request, Walk $walk)

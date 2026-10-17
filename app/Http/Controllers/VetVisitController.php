@@ -15,7 +15,7 @@ class VetVisitController extends Controller
         $query = VetVisit::with(['pet', 'user'])->orderByDesc('visited_at');
         $this->scopeToUserPets($query, $request);
 
-        return $query->paginate(20);
+        return $this->paginateRecords($query, $request, 'visited_at');
     }
 
     public function show(Request $request, VetVisit $vetVisit)

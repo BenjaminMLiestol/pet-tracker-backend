@@ -17,7 +17,7 @@ class FeedingController extends Controller
         $query = Feeding::with(['pet', 'user'])->orderByDesc('fed_at');
         $this->scopeToUserPets($query, $request);
 
-        return $query->paginate(20);
+        return $this->paginateRecords($query, $request, 'fed_at');
     }
 
     public function show(Request $request, Feeding $feeding)

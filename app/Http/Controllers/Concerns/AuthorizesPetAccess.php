@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Concerns;
 
 use App\Models\Pet;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -42,5 +43,22 @@ trait AuthorizesPetAccess
     protected function authorizeRecord(Request $request, Model $record): void
     {
         abort_unless(in_array($record->pet_id, $this->ownedPetIds($request), true), 404);
+    }
+
+    /**
+     * Paginate a list: ?per_page=1..500 (default 100) and ?since=<date> filter on $dateColumn.
+     */
+    protected function paginateRecords(Builder $query, Request $request, string $dateColumn): LengthAwarePaginator
+    {
+        $params = $request->validate([
+            'per_page' => 'sometimes|integer|min:1|max:500',
+            'since' => 'sometimes|date',
+        ]);
+
+        if (isset($params['since'])) {
+            $query->where($dateColumn, '>=', $params['since']);
+        }
+
+        return $query->paginate($params['per_page'] ?? 100);
     }
 }

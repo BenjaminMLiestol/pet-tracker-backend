@@ -17,7 +17,7 @@ class BathController extends Controller
         $query = Bath::with(['pet', 'user'])->orderByDesc('bathed_at');
         $this->scopeToUserPets($query, $request);
 
-        return $query->paginate(20);
+        return $this->paginateRecords($query, $request, 'bathed_at');
     }
 
     public function show(Request $request, Bath $bath)
