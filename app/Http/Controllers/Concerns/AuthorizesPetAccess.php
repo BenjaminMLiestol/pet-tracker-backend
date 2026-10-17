@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Concerns;
 
 use App\Models\Pet;
 use Illuminate\Database\Eloquent\Builder;
+use Carbon\Carbon;
+use Closure;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -60,5 +62,18 @@ trait AuthorizesPetAccess
         }
 
         return $query->paginate($params['per_page'] ?? 100);
+    }
+
+    /** Rule: the value must not fall on an earlier calendar day than $reference. */
+    protected function notBeforeDay(mixed $reference, string $label): Closure
+    {
+        return function (string $attribute, mixed $value, Closure $fail) use ($reference, $label) {
+            if ($value === null || $reference === null) {
+                return;
+            }
+            if (Carbon::parse($value)->startOfDay()->lt(Carbon::parse($reference)->startOfDay())) {
+                $fail("The {$attribute} must not be before the {$label}.");
+            }
+        };
     }
 }

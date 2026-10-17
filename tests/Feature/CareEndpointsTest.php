@@ -64,4 +64,23 @@ class CareEndpointsTest extends TestCase
         $this->deleteJson("/api/baths/$id")->assertNoContent();
         $this->getJson("/api/baths?pet_id={$pet->id}")->assertJsonCount(0, 'data');
     }
+
+    public function test_next_due_cannot_precede_the_visit_date(): void
+    {
+        $pet = $this->actingPet();
+
+        $this->postJson('/api/vaccinations', [
+            'pet_id' => $pet->id, 'name' => 'Rabies',
+            'given_at' => '2026-10-10T12:00:00Z', 'next_due_at' => '2026-10-01T00:00:00Z',
+        ])->assertUnprocessable()->assertJsonValidationErrors('next_due_at');
+
+        $id = $this->postJson('/api/vaccinations', [
+            'pet_id' => $pet->id, 'name' => 'Rabies',
+            'given_at' => '2026-10-10T12:00:00Z', 'next_due_at' => '2026-10-10T00:00:00Z',
+        ])->assertCreated()->json('id');
+
+        $this->patchJson("/api/vaccinations/$id", ['next_due_at' => '2026-09-01T00:00:00Z'])->assertUnprocessable();
+        $this->patchJson("/api/vaccinations/$id", ['next_due_at' => '2027-10-10T00:00:00Z'])->assertOk();
+        $this->postJson('/api/vet-visits', ['pet_id' => $pet->id, 'reason' => 'x', 'next_visit_at' => '2020-01-01T00:00:00Z'])->assertUnprocessable();
+    }
 }

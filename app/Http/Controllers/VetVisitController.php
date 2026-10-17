@@ -30,7 +30,7 @@ class VetVisitController extends Controller
             'pet_id' => $this->petIdRule($request),
             'reason' => 'required|string|max:255',
             'visited_at' => 'nullable|date',
-            'next_visit_at' => 'nullable|date',
+            'next_visit_at' => ['nullable', 'date', $this->notBeforeDay($request->input('visited_at', now()), 'visit date')],
             'notes' => 'nullable|string|max:2000',
         ]);
         $data['user_id'] = $request->user()->id;
@@ -45,7 +45,7 @@ class VetVisitController extends Controller
         $data = $request->validate([
             'reason' => 'sometimes|string|max:255',
             'visited_at' => 'sometimes|date',
-            'next_visit_at' => 'nullable|date',
+            'next_visit_at' => ['nullable', 'date', $this->notBeforeDay($request->input('visited_at', $vetVisit->visited_at), 'visit date')],
             'notes' => 'nullable|string|max:2000',
         ]);
         $vetVisit->update($data);

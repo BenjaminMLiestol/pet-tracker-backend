@@ -30,7 +30,7 @@ class VaccinationController extends Controller
             'pet_id' => $this->petIdRule($request),
             'name' => 'required|string|max:255',
             'given_at' => 'nullable|date',
-            'next_due_at' => 'nullable|date',
+            'next_due_at' => ['nullable', 'date', $this->notBeforeDay($request->input('given_at', now()), 'vaccination date')],
             'notes' => 'nullable|string|max:2000',
         ]);
         $data['user_id'] = $request->user()->id;
@@ -45,7 +45,7 @@ class VaccinationController extends Controller
         $data = $request->validate([
             'name' => 'sometimes|string|max:255',
             'given_at' => 'sometimes|date',
-            'next_due_at' => 'nullable|date',
+            'next_due_at' => ['nullable', 'date', $this->notBeforeDay($request->input('given_at', $vaccination->given_at), 'vaccination date')],
             'notes' => 'nullable|string|max:2000',
         ]);
         $vaccination->update($data);

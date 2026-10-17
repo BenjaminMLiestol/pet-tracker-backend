@@ -32,7 +32,7 @@ class ParasiteTreatmentController extends Controller
             'type' => ['required', Rule::in(['flea', 'tick', 'worm'])],
             'product' => 'nullable|string|max:255',
             'given_at' => 'nullable|date',
-            'next_due_at' => 'nullable|date',
+            'next_due_at' => ['nullable', 'date', $this->notBeforeDay($request->input('given_at', now()), 'treatment date')],
             'notes' => 'nullable|string|max:2000',
         ]);
         $data['user_id'] = $request->user()->id;
@@ -48,7 +48,7 @@ class ParasiteTreatmentController extends Controller
             'type' => ['sometimes', Rule::in(['flea', 'tick', 'worm'])],
             'product' => 'nullable|string|max:255',
             'given_at' => 'sometimes|date',
-            'next_due_at' => 'nullable|date',
+            'next_due_at' => ['nullable', 'date', $this->notBeforeDay($request->input('given_at', $parasiteTreatment->given_at), 'treatment date')],
             'notes' => 'nullable|string|max:2000',
         ]);
         $parasiteTreatment->update($data);
