@@ -26,7 +26,9 @@ Route::prefix('v1')->group(function () {
         Route::get('auth/me', [AuthController::class, 'me']);
         Route::patch('auth/me', [AuthController::class, 'update']);
         Route::delete('auth/me', [AuthController::class, 'destroy']);
+        Route::post('auth/refresh', [AuthController::class, 'refresh']);
         Route::post('auth/logout', [AuthController::class, 'logout']);
+        Route::post('auth/logout-all', [AuthController::class, 'logoutAll']);
 
         // Push notifications: this phone's Expo token.
         Route::post('devices', [DeviceTokenController::class, 'store']);

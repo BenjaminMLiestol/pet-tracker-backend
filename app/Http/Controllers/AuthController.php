@@ -9,6 +9,19 @@ use Illuminate\Validation\Rules\Password;
 
 class AuthController extends Controller
 {
+    // A login lasts a week. The app swaps it for a fresh one each time it opens, so people
+    // who use it stay signed in and a lost phone goes quiet by itself.
+    public const TOKEN_DAYS = 7;
+
+    // The swapped-out token keeps working briefly, so a refresh whose reply never arrived
+    // (a dropped connection) doesn't sign the person out.
+    public const REFRESH_GRACE_MINUTES = 5;
+
+    private function issueToken(User $user): string
+    {
+        return $user->createToken('mobile', ['*'], now()->addDays(self::TOKEN_DAYS))->plainTextToken;
+    }
+
     public function register(Request $request)
     {
         $data = $request->validate([
@@ -27,7 +40,7 @@ class AuthController extends Controller
             'date_of_birth' => $data['date_of_birth'] ?? null,
         ]);
 
-        $token = $user->createToken('mobile')->plainTextToken;
+        $token = $this->issueToken($user);
 
         return response()->json(['user' => $user, 'token' => $token], 201);
     }
@@ -44,7 +57,21 @@ class AuthController extends Controller
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
-        $token = $user->createToken('mobile')->plainTextToken;
+        $token = $this->issueToken($user);
+
+        return response()->json(['user' => $user, 'token' => $token]);
+    }
+
+    public function refresh(Request $request)
+    {
+        $user = $request->user();
+        $current = $user->currentAccessToken();
+
+        $token = $this->issueToken($user);
+        $graceEnds = now()->addMinutes(self::REFRESH_GRACE_MINUTES);
+        if ($current->expires_at === null || $current->expires_at->gt($graceEnds)) {
+            $current->forceFill(['expires_at' => $graceEnds])->save();
+        }
 
         return response()->json(['user' => $user, 'token' => $token]);
     }
@@ -84,6 +111,14 @@ class AuthController extends Controller
         $user->delete();
 
         return response()->json([], 204);
+    }
+
+    /** Sign out everywhere: every phone and session of this person. */
+    public function logoutAll(Request $request)
+    {
+        $request->user()->tokens()->delete();
+
+        return response()->json(['message' => 'Logged out everywhere']);
     }
 
     public function logout(Request $request)

@@ -23,6 +23,12 @@ php artisan test
 
 Set `APP_DEBUG=false` and `APP_ENV=production` outside local development.
 
+## Logins
+
+A login token lasts 7 days (`AuthController::TOKEN_DAYS`). The app calls `/auth/refresh` when it
+opens, so regular use never expires and a lost phone goes quiet within a week. Expired tokens are
+pruned daily by the scheduler (`php artisan schedule:work` locally, a cron entry in production).
+
 ## Conventions
 
 - Every `/api/v1` response is JSON, errors included (`{"message": "..."}`): `401` unauthenticated or bad login, `404` not found **or not yours**, `422` validation (`{"message", "errors"}`), `429` throttled.
@@ -43,7 +49,9 @@ All routes are under `/api/v1`; everything except register/login needs `Authoriz
 | GET | `/auth/me` | | current user |
 | PATCH | `/auth/me` | any register field, `feeding_reminder_time?`, `walk_reminder_time?` | update own account. Reminder times are personal, 24h `HH:MM` (default `18:00` / `19:00`) |
 | DELETE | `/auth/me` | | delete own account and revoke tokens |
+| POST | `/auth/refresh` | | `{user, token}`: swaps the current login for a fresh 7-day one. The old token works for 5 more minutes (so a lost reply doesn't sign anyone out) |
 | POST | `/auth/logout` | | revoke the current token |
+| POST | `/auth/logout-all` | | revoke every token of this account (sign out everywhere) |
 
 ### Pets
 

@@ -119,4 +119,68 @@ class AuthTest extends TestCase
         Sanctum::actingAs($b);
         $this->getJson('/api/v1/auth/me')->assertJsonPath('feeding_reminder_time', '18:00');
     }
+
+    /** Calls the API with a real bearer token (Sanctum::actingAs would skip token expiry). */
+    private function apiAs(string $token, string $method, string $uri): \Illuminate\Testing\TestResponse
+    {
+        $this->app['auth']->forgetGuards(); // the guard remembers the previous request's user
+
+        return $this->withToken($token)->json($method, $uri);
+    }
+
+    private function signIn(): string
+    {
+        User::create(['email' => 'a@b.test', 'password' => bcrypt('secret123'), 'first_name' => 'A', 'last_name' => 'B']);
+
+        return $this->postJson('/api/v1/auth/login', ['email' => 'a@b.test', 'password' => 'secret123'])->json('token');
+    }
+
+    public function test_a_login_lasts_a_week(): void
+    {
+        $token = $this->signIn();
+
+        $this->assertEquals(now()->addDays(7)->startOfMinute(), \Laravel\Sanctum\PersonalAccessToken::first()->expires_at->startOfMinute());
+
+        $this->travelTo(now()->addDays(7)->addMinute());
+        $this->apiAs($token, 'GET', '/api/v1/auth/me')->assertUnauthorized();
+    }
+
+    public function test_refreshing_swaps_in_a_fresh_week_and_keeps_the_old_login_for_a_moment(): void
+    {
+        $old = $this->signIn();
+        $this->travel(6)->days();
+
+        $new = $this->apiAs($old, 'POST', '/api/v1/auth/refresh')->assertOk()->assertJsonStructure(['user', 'token'])->json('token');
+        $this->assertNotSame($old, $new);
+
+        // Both work right after (a lost reply must not log anyone out)...
+        $this->apiAs($old, 'GET', '/api/v1/auth/me')->assertOk();
+        $this->apiAs($new, 'GET', '/api/v1/auth/me')->assertOk();
+
+        // ...but the old one is gone after the grace period, while the new one lasts a week.
+        $this->travel(10)->minutes();
+        $this->apiAs($old, 'GET', '/api/v1/auth/me')->assertUnauthorized();
+        $this->travel(5)->days();
+        $this->apiAs($new, 'GET', '/api/v1/auth/me')->assertOk();
+    }
+
+    public function test_refresh_needs_a_valid_login(): void
+    {
+        $this->postJson('/api/v1/auth/refresh')->assertUnauthorized();
+        $token = $this->signIn();
+        $this->travel(8)->days();
+
+        $this->apiAs($token, 'POST', '/api/v1/auth/refresh')->assertUnauthorized();
+    }
+
+    public function test_sign_out_everywhere_ends_every_session(): void
+    {
+        $first = $this->signIn();
+        $second = $this->postJson('/api/v1/auth/login', ['email' => 'a@b.test', 'password' => 'secret123'])->json('token');
+
+        $this->apiAs($first, 'POST', '/api/v1/auth/logout-all')->assertOk();
+
+        $this->apiAs($first, 'GET', '/api/v1/auth/me')->assertUnauthorized();
+        $this->apiAs($second, 'GET', '/api/v1/auth/me')->assertUnauthorized();
+    }
 }
