@@ -19,4 +19,16 @@ class AuthTest extends TestCase
         $this->postJson('/api/auth/login', ['email' => 'a@b.test', 'password' => 'wrong'])
             ->assertStatus(429);
     }
+
+    public function test_bad_credentials_return_401_and_good_ones_a_token(): void
+    {
+        User::create(['email' => 'a@b.test', 'password' => bcrypt('secret123'), 'first_name' => 'A', 'last_name' => 'B']);
+
+        $this->postJson('/api/auth/login', ['email' => 'a@b.test', 'password' => 'wrong'])
+            ->assertUnauthorized()
+            ->assertJsonPath('message', 'Invalid credentials');
+        $this->postJson('/api/auth/login', ['email' => 'a@b.test', 'password' => 'secret123'])
+            ->assertOk()
+            ->assertJsonStructure(['user', 'token']);
+    }
 }
