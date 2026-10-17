@@ -12,17 +12,15 @@ class PetUserSeeder extends Seeder
     {
         $pet = Pet::where('name', 'Toya')->first();
         if (! $pet) {
-            $this->command->warn('Pet "Toya" not found. Run PetSeeder first.');
+            $this->command?->warn('Pet "Toya" not found. Run PetSeeder first.');
 
             return;
         }
 
-        $ben = User::where('email', 'bennyliestol@gmail.com')->first();
-        $camilla = User::where('email', 'camillaab@icloud.com')->first();
-
-        $userIds = collect([$ben?->id, $camilla?->id])->filter()->all();
+        $emails = collect(config('seeding.users', []))->pluck('email')->all();
+        $userIds = User::whereIn('email', $emails)->pluck('id')->all();
         if (empty($userIds)) {
-            $this->command->warn('No users found to attach to Toya. Run UserSeeder first.');
+            $this->command?->warn('No users found to attach to Toya. Run UserSeeder first.');
 
             return;
         }
