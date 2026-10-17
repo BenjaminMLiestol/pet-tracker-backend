@@ -73,4 +73,14 @@ class AuthTest extends TestCase
         $this->app['auth']->forgetGuards();
         $this->withToken($token)->getJson('/api/auth/me')->assertUnauthorized();
     }
+
+    public function test_authenticated_api_is_rate_limited(): void
+    {
+        Sanctum::actingAs(User::create(['email' => 'a@b.test', 'password' => 'secret123', 'first_name' => 'A', 'last_name' => 'B']));
+
+        for ($i = 0; $i < 120; $i++) {
+            $this->getJson('/api/auth/me')->assertOk();
+        }
+        $this->getJson('/api/auth/me')->assertStatus(429);
+    }
 }
