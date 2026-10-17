@@ -30,7 +30,7 @@ class WeightController extends Controller
     {
         $data = $request->validate([
             'pet_id' => $this->petIdRule($request),
-            'value' => 'required|numeric',
+            'value' => 'required|numeric|min:0.01|max:500',
             'weighed_at' => 'nullable|date',
         ]);
         $data['user_id'] = $request->user()->id;
@@ -43,7 +43,7 @@ class WeightController extends Controller
     {
         $this->authorizeRecord($request, $weight);
         $data = $request->validate([
-            'value' => 'sometimes|numeric',
+            'value' => 'sometimes|numeric|min:0.01|max:500',
             'weighed_at' => 'sometimes|date',
         ]);
         $weight->update($data);

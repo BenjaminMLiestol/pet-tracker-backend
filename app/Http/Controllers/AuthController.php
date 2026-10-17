@@ -12,11 +12,11 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $data = $request->validate([
-            'email' => ['required', 'email', 'unique:users,email'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', Password::min(8)],
-            'first_name' => ['required', 'string'],
-            'last_name' => ['required', 'string'],
-            'date_of_birth' => ['nullable', 'date'],
+            'first_name' => ['required', 'string', 'max:255'],
+            'last_name' => ['required', 'string', 'max:255'],
+            'date_of_birth' => ['nullable', 'date', 'before_or_equal:today'],
         ]);
 
         $user = User::create([
@@ -58,11 +58,11 @@ class AuthController extends Controller
     {
         $user = $request->user();
         $data = $request->validate([
-            'email' => ['sometimes', 'email', 'unique:users,email,'.$user->id],
+            'email' => ['sometimes', 'email', 'max:255', 'unique:users,email,'.$user->id],
             'password' => ['sometimes', Password::min(8)],
-            'first_name' => ['sometimes', 'string'],
-            'last_name' => ['sometimes', 'string'],
-            'date_of_birth' => ['nullable', 'date'],
+            'first_name' => ['sometimes', 'string', 'max:255'],
+            'last_name' => ['sometimes', 'string', 'max:255'],
+            'date_of_birth' => ['nullable', 'date', 'before_or_equal:today'],
         ]);
         if (isset($data['password'])) {
             $data['password'] = Hash::make($data['password']);

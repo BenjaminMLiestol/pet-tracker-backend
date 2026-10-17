@@ -111,4 +111,18 @@ class OwnershipTest extends TestCase
             ->assertCreated()->assertJsonPath('age', 3);
         $this->postJson('/api/pets', ['name' => 'NoDob'])->assertCreated()->assertJsonPath('age', null);
     }
+
+    public function test_input_limits(): void
+    {
+        $me = $this->user('me@test.dev');
+        $pet = Pet::create(['name' => 'Mine']);
+        $pet->users()->attach($me);
+        Sanctum::actingAs($me);
+
+        $this->postJson('/api/weights', ['pet_id' => $pet->id, 'value' => -3])->assertUnprocessable();
+        $this->postJson('/api/weights', ['pet_id' => $pet->id, 'value' => 9000])->assertUnprocessable();
+        $this->postJson('/api/weights', ['pet_id' => $pet->id, 'value' => 12.5])->assertCreated();
+        $this->postJson('/api/pets', ['name' => str_repeat('a', 256)])->assertUnprocessable();
+        $this->postJson('/api/pets', ['name' => 'Future', 'date_of_birth' => now()->addDay()->toDateString()])->assertUnprocessable();
+    }
 }

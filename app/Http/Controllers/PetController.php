@@ -25,9 +25,9 @@ class PetController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'name' => 'required|string',
-            'breed' => 'nullable|string',
-            'date_of_birth' => 'nullable|date',
+            'name' => 'required|string|max:255',
+            'breed' => 'nullable|string|max:255',
+            'date_of_birth' => 'nullable|date|before_or_equal:today',
             'user_ids' => 'nullable|array',
             'user_ids.*' => 'integer|exists:users,id',
         ]);
@@ -42,9 +42,9 @@ class PetController extends Controller
         $this->authorizePet($request, $pet);
 
         $data = $request->validate([
-            'name' => 'sometimes|string',
-            'breed' => 'sometimes|string|nullable',
-            'date_of_birth' => 'nullable|date',
+            'name' => 'sometimes|string|max:255',
+            'breed' => 'sometimes|string|nullable|max:255',
+            'date_of_birth' => 'nullable|date|before_or_equal:today',
             'user_ids' => 'nullable|array',
             'user_ids.*' => 'integer|exists:users,id',
         ]);
