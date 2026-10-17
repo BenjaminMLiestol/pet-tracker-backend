@@ -6,6 +6,7 @@ use App\Models\Feeding;
 use App\Models\Pet;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -137,6 +138,28 @@ class OwnershipTest extends TestCase
 
         $this->postJson('/api/v1/feedings', ['pet_id' => $pet->id, 'fed_at' => null])
             ->assertCreated()->assertJsonPath('feed_check', true)->assertJsonPath('fed_at', fn ($v) => $v !== null);
+    }
+
+    public function test_entries_can_be_backdated_and_edited_but_not_set_in_the_future(): void
+    {
+        $me = $this->user('me@test.dev');
+        $pet = Pet::create(['name' => 'Mine']);
+        $pet->users()->attach($me);
+        Sanctum::actingAs($me);
+
+        $past = now()->subDays(2)->startOfHour();
+        $id = $this->postJson('/api/v1/walks', ['pet_id' => $pet->id, 'walked_at' => $past->toIso8601String()])
+            ->assertCreated()->json('id');
+
+        $earlier = $past->copy()->subHours(3);
+        $this->patchJson("/api/v1/walks/$id", ['walked_at' => $earlier->toIso8601String()])
+            ->assertOk()
+            ->assertJsonPath('walked_at', fn ($v) => Carbon::parse($v)->equalTo($earlier));
+
+        $future = now()->addHour()->toIso8601String();
+        $this->patchJson("/api/v1/walks/$id", ['walked_at' => $future])->assertUnprocessable();
+        $this->postJson('/api/v1/feedings', ['pet_id' => $pet->id, 'fed_at' => $future])->assertUnprocessable();
+        $this->postJson('/api/v1/weights', ['pet_id' => $pet->id, 'value' => 10, 'weighed_at' => $future])->assertUnprocessable();
     }
 
     public static function resources(): array

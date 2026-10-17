@@ -20,11 +20,11 @@ class WalkController extends RecordController
 
     protected function storeRules(Request $request): array
     {
-        return ['walk_check' => 'sometimes|boolean', 'walked_at' => 'nullable|date'];
+        return ['walk_check' => 'sometimes|boolean', 'walked_at' => 'nullable|date|before_or_equal:+5 minutes'];
     }
 
     protected function updateRules(Request $request, Model $record): array
     {
-        return ['walk_check' => 'sometimes|boolean', 'walked_at' => 'sometimes|date'];
+        return ['walk_check' => 'sometimes|boolean', 'walked_at' => 'sometimes|date|before_or_equal:+5 minutes'];
     }
 }

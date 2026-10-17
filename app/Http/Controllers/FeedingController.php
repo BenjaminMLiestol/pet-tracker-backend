@@ -20,11 +20,11 @@ class FeedingController extends RecordController
 
     protected function storeRules(Request $request): array
     {
-        return ['feed_check' => 'sometimes|boolean', 'fed_at' => 'nullable|date'];
+        return ['feed_check' => 'sometimes|boolean', 'fed_at' => 'nullable|date|before_or_equal:+5 minutes'];
     }
 
     protected function updateRules(Request $request, Model $record): array
     {
-        return ['feed_check' => 'sometimes|boolean', 'fed_at' => 'sometimes|date'];
+        return ['feed_check' => 'sometimes|boolean', 'fed_at' => 'sometimes|date|before_or_equal:+5 minutes'];
     }
 }

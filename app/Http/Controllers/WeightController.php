@@ -20,11 +20,11 @@ class WeightController extends RecordController
 
     protected function storeRules(Request $request): array
     {
-        return ['value' => 'required|numeric|min:0.01|max:500', 'weighed_at' => 'nullable|date'];
+        return ['value' => 'required|numeric|min:0.01|max:500', 'weighed_at' => 'nullable|date|before_or_equal:+5 minutes'];
     }
 
     protected function updateRules(Request $request, Model $record): array
     {
-        return ['value' => 'sometimes|numeric|min:0.01|max:500', 'weighed_at' => 'sometimes|date'];
+        return ['value' => 'sometimes|numeric|min:0.01|max:500', 'weighed_at' => 'sometimes|date|before_or_equal:+5 minutes'];
     }
 }
