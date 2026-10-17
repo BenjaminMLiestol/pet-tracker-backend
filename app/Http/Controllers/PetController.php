@@ -7,7 +7,6 @@ namespace App\Http\Controllers;
 use App\Http\Resources\PetResource;
 use App\Models\Pet;
 use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
 
 class PetController extends Controller
 {
@@ -32,11 +31,10 @@ class PetController extends Controller
             'timezone' => 'sometimes|timezone:all',
             'bath_interval_days' => 'sometimes|integer|min:1|max:365',
             'date_of_birth' => 'nullable|date|before_or_equal:today',
-            'user_ids' => 'nullable|array',
-            'user_ids.*' => 'integer|exists:users,id',
         ]);
-        $pet = Pet::create(Arr::except($data, 'user_ids'));
-        $pet->users()->sync($this->ownerIds($request, $data['user_ids'] ?? []));
+        $pet = Pet::create($data);
+        // The creator is the first owner. Others join through an invitation code.
+        $pet->users()->attach($request->user()->id);
 
         return (new PetResource($pet->load('users')))->response()->setStatusCode(201);
     }
@@ -51,13 +49,8 @@ class PetController extends Controller
             'timezone' => 'sometimes|timezone:all',
             'bath_interval_days' => 'sometimes|integer|min:1|max:365',
             'date_of_birth' => 'nullable|date|before_or_equal:today',
-            'user_ids' => 'nullable|array',
-            'user_ids.*' => 'integer|exists:users,id',
         ]);
-        $pet->update(Arr::except($data, 'user_ids'));
-        if (array_key_exists('user_ids', $data)) {
-            $pet->users()->sync($this->ownerIds($request, $data['user_ids'] ?? []));
-        }
+        $pet->update($data);
 
         return new PetResource($pet->load('users'));
     }
@@ -69,12 +62,6 @@ class PetController extends Controller
         $pet->delete();
 
         return response()->json([], 204);
-    }
-
-    /** The acting user is always an owner, so a pet can never be orphaned. */
-    private function ownerIds(Request $request, array $userIds): array
-    {
-        return array_values(array_unique([...$userIds, $request->user()->id]));
     }
 
     private function authorizePet(Request $request, Pet $pet): void

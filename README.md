@@ -49,7 +49,19 @@ All routes are under `/api/v1`; everything except register/login needs `Authoriz
 
 `GET|POST /pets`, `GET|PATCH|DELETE /pets/{id}`
 
-Fields: `name` (required), `breed?`, `timezone?` (IANA, default `Europe/Oslo`; decides where "today" starts), `bath_interval_days?` (1-365, default 30; shared by all owners), `date_of_birth?`, `user_ids?` (extra owners; you are always an owner). `age` is read-only, derived from `date_of_birth`. Deleting a pet also soft-deletes its records.
+Fields: `name` (required), `breed?`, `timezone?` (IANA, default `Europe/Oslo`; decides where "today" starts), `bath_interval_days?` (1-365, default 30; shared by all owners), `date_of_birth?`, You are the first owner; others join with an invitation code (below). `age` is read-only, derived from `date_of_birth`. Deleting a pet also soft-deletes its records.
+
+### Sharing a dog (co-owners)
+
+An owner creates a one-time code and shares it however they like; the other person enters it in the app. Codes are 8 characters from an alphabet without look-alikes (no `0/O`, `1/I/L`), single-use, and expire after 7 days. Typing is forgiving (`abcd-efgh` works). A dog can have 5 open invitations at once.
+
+| Method | Path | Notes |
+| --- | --- | --- |
+| POST | `/pets/{id}/invitations` | owner only; `201 {id, pet_id, code, expires_at}` |
+| GET | `/pets/{id}/invitations` | owner only; open invitations (a plain array) |
+| DELETE | `/pets/{id}/invitations/{invitation}` | owner only; cancel a code |
+| POST | `/invitations/accept` | `{code}`; you become a co-owner and get the pet back. Every failure (unknown, used, cancelled, expired, deleted dog) returns the same `422` message, and attempts are limited to 10 a minute |
+| DELETE | `/pets/{id}/users/{userId}` | leave a dog (yourself) or remove a co-owner. A dog always keeps at least one owner |
 
 ### Per-pet records
 

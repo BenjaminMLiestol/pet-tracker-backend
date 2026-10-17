@@ -51,6 +51,11 @@ class Pet extends Model
         return $query->whereHas('users', fn ($q) => $q->where('users.id', $user->id));
     }
 
+    public function invitations()
+    {
+        return $this->hasMany(PetInvitation::class);
+    }
+
     public function users()
     {
         return $this->belongsToMany(User::class)->withTimestamps();

@@ -83,8 +83,10 @@ class OwnershipTest extends TestCase
         $id = $this->postJson('/api/v1/pets', ['name' => 'Rex'])->assertCreated()->json('id');
         $this->getJson('/api/v1/pets')->assertJsonCount(1, 'data');
 
-        $this->patchJson("/api/v1/pets/$id", ['user_ids' => [$other->id]])->assertOk()->assertJsonCount(2, 'users');
-        $this->patchJson("/api/v1/pets/$id", ['user_ids' => []])->assertOk()->assertJsonCount(1, 'users');
+        // Nobody can be added by id any more: co-owners join through an invitation code.
+        $this->patchJson("/api/v1/pets/$id", ['user_ids' => [$other->id]])->assertOk()->assertJsonCount(1, 'users');
+        $this->postJson('/api/v1/pets', ['name' => 'Rex2', 'user_ids' => [$other->id]])
+            ->assertCreated()->assertJsonCount(1, 'users');
     }
 
     public function test_deleting_a_pet_soft_deletes_its_records_and_restore_brings_them_back(): void
@@ -200,8 +202,12 @@ class OwnershipTest extends TestCase
         $other = $this->user('other@test.dev');
         Sanctum::actingAs($me);
 
-        $json = $this->postJson('/api/v1/pets', ['name' => 'Rex', 'date_of_birth' => '2021-10-30', 'user_ids' => [$other->id]])
-            ->assertCreated()
+        $id = $this->postJson('/api/v1/pets', ['name' => 'Rex', 'date_of_birth' => '2021-10-30'])
+            ->assertCreated()->json('id');
+        Pet::find($id)->users()->attach($other->id);
+
+        $json = $this->getJson("/api/v1/pets/$id")
+            ->assertOk()
             ->assertJsonPath('name', 'Rex')
             ->assertJsonPath('date_of_birth', '2021-10-30')
             ->assertJsonCount(2, 'users')

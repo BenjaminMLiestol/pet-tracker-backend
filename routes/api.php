@@ -5,6 +5,8 @@ use App\Http\Controllers\BathController;
 use App\Http\Controllers\FeedingController;
 use App\Http\Controllers\ParasiteTreatmentController;
 use App\Http\Controllers\PetController;
+use App\Http\Controllers\PetInvitationController;
+use App\Http\Controllers\PetOwnerController;
 use App\Http\Controllers\VaccinationController;
 use App\Http\Controllers\VetVisitController;
 use App\Http\Controllers\WalkController;
@@ -26,6 +28,13 @@ Route::prefix('v1')->group(function () {
         Route::post('auth/logout', [AuthController::class, 'logout']);
 
         Route::apiResource('pets', PetController::class);
+
+        // Sharing a dog: one-time invitation codes, and leaving / removing a co-owner.
+        Route::get('pets/{pet}/invitations', [PetInvitationController::class, 'index']);
+        Route::post('pets/{pet}/invitations', [PetInvitationController::class, 'store']);
+        Route::delete('pets/{pet}/invitations/{invitation}', [PetInvitationController::class, 'destroy']);
+        Route::post('invitations/accept', [PetInvitationController::class, 'accept'])->middleware('throttle:invite-accept');
+        Route::delete('pets/{pet}/users/{user}', [PetOwnerController::class, 'destroy']);
 
         // Activity resources
         Route::apiResource('feedings', FeedingController::class);

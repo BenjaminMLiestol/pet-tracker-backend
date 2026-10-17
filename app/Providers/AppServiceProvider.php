@@ -30,6 +30,10 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('api', fn (Request $request) => Limit::perMinute(120)
             ->by($request->user()?->id ?: $request->ip()));
 
+        // Invitation codes are short: limit guessing to 10 tries a minute per person.
+        RateLimiter::for('invite-accept', fn (Request $request) => Limit::perMinute(10)
+            ->by($request->user()?->id ?: $request->ip()));
+
         // Brute-force protection for login/register: 5 attempts/minute per email + IP.
         RateLimiter::for('auth', fn (Request $request) => Limit::perMinute(5)
             ->by(strtolower((string) $request->input('email')).'|'.$request->ip()));
