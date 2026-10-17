@@ -20,11 +20,11 @@ class BathController extends RecordController
 
     protected function storeRules(Request $request): array
     {
-        return ['bathed_at' => 'nullable|date'];
+        return ['bathed_at' => 'nullable|date|before_or_equal:+5 minutes'];
     }
 
     protected function updateRules(Request $request, Model $record): array
     {
-        return ['bathed_at' => 'sometimes|date'];
+        return ['bathed_at' => 'sometimes|date|before_or_equal:+5 minutes'];
     }
 }

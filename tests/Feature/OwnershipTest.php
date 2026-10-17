@@ -160,6 +160,7 @@ class OwnershipTest extends TestCase
         $this->patchJson("/api/v1/walks/$id", ['walked_at' => $future])->assertUnprocessable();
         $this->postJson('/api/v1/feedings', ['pet_id' => $pet->id, 'fed_at' => $future])->assertUnprocessable();
         $this->postJson('/api/v1/weights', ['pet_id' => $pet->id, 'value' => 10, 'weighed_at' => $future])->assertUnprocessable();
+        $this->postJson('/api/v1/baths', ['pet_id' => $pet->id, 'bathed_at' => $future])->assertUnprocessable();
     }
 
     public static function resources(): array
