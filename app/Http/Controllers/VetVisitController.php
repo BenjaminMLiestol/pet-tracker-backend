@@ -3,61 +3,38 @@
 namespace App\Http\Controllers;
 
 use App\Models\VetVisit;
-use App\Http\Controllers\Concerns\AuthorizesPetAccess;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 
-class VetVisitController extends Controller
+class VetVisitController extends RecordController
 {
-    use AuthorizesPetAccess;
-
-    public function index(Request $request)
+    protected function model(): string
     {
-        $query = VetVisit::with(['pet', 'user'])->orderByDesc('visited_at');
-        $this->scopeToUserPets($query, $request);
-
-        return $this->paginateRecords($query, $request, 'visited_at');
+        return VetVisit::class;
     }
 
-    public function show(Request $request, VetVisit $vetVisit)
+    protected function dateColumn(): string
     {
-        $this->authorizeRecord($request, $vetVisit);
-        return $vetVisit->load(['pet', 'user']);
+        return 'visited_at';
     }
 
-    public function store(Request $request)
+    protected function storeRules(Request $request): array
     {
-        $data = $request->validate([
-            'pet_id' => $this->petIdRule($request),
+        return [
             'reason' => 'required|string|max:255',
             'visited_at' => 'nullable|date',
             'next_visit_at' => ['nullable', 'date', $this->notBeforeDay($request->input('visited_at', now()), 'visit date')],
             'notes' => 'nullable|string|max:2000',
-        ]);
-        $data['user_id'] = $request->user()->id;
-        $vetVisit = VetVisit::create($data);
-
-        return response()->json($vetVisit->load(['pet', 'user']), 201);
+        ];
     }
 
-    public function update(Request $request, VetVisit $vetVisit)
+    protected function updateRules(Request $request, Model $record): array
     {
-        $this->authorizeRecord($request, $vetVisit);
-        $data = $request->validate([
+        return [
             'reason' => 'sometimes|string|max:255',
             'visited_at' => 'sometimes|date',
-            'next_visit_at' => ['nullable', 'date', $this->notBeforeDay($request->input('visited_at', $vetVisit->visited_at), 'visit date')],
+            'next_visit_at' => ['nullable', 'date', $this->notBeforeDay($request->input('visited_at', $record->visited_at), 'visit date')],
             'notes' => 'nullable|string|max:2000',
-        ]);
-        $vetVisit->update($data);
-
-        return $vetVisit->load(['pet', 'user']);
-    }
-
-    public function destroy(Request $request, VetVisit $vetVisit)
-    {
-        $this->authorizeRecord($request, $vetVisit);
-        $vetVisit->delete();
-
-        return response()->json([], 204);
+        ];
     }
 }

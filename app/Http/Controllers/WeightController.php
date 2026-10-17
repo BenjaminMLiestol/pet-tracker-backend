@@ -1,61 +1,30 @@
 <?php
 
-// app/Http/Controllers/WeightController.php
-
 namespace App\Http\Controllers;
 
 use App\Models\Weight;
-use App\Http\Controllers\Concerns\AuthorizesPetAccess;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 
-class WeightController extends Controller
+class WeightController extends RecordController
 {
-    use AuthorizesPetAccess;
-
-    public function index(Request $request)
+    protected function model(): string
     {
-        $query = Weight::with(['pet', 'user'])->orderByDesc('weighed_at');
-        $this->scopeToUserPets($query, $request);
-
-        return $this->paginateRecords($query, $request, 'weighed_at');
+        return Weight::class;
     }
 
-    public function show(Request $request, Weight $weight)
+    protected function dateColumn(): string
     {
-        $this->authorizeRecord($request, $weight);
-        return $weight->load(['pet', 'user']);
+        return 'weighed_at';
     }
 
-    public function store(Request $request)
+    protected function storeRules(Request $request): array
     {
-        $data = $request->validate([
-            'pet_id' => $this->petIdRule($request),
-            'value' => 'required|numeric|min:0.01|max:500',
-            'weighed_at' => 'nullable|date',
-        ]);
-        $data['user_id'] = $request->user()->id;
-        $weight = Weight::create($data);
-
-        return response()->json($weight->load(['pet', 'user']), 201);
+        return ['value' => 'required|numeric|min:0.01|max:500', 'weighed_at' => 'nullable|date'];
     }
 
-    public function update(Request $request, Weight $weight)
+    protected function updateRules(Request $request, Model $record): array
     {
-        $this->authorizeRecord($request, $weight);
-        $data = $request->validate([
-            'value' => 'sometimes|numeric|min:0.01|max:500',
-            'weighed_at' => 'sometimes|date',
-        ]);
-        $weight->update($data);
-
-        return $weight->load(['pet', 'user']);
-    }
-
-    public function destroy(Request $request, Weight $weight)
-    {
-        $this->authorizeRecord($request, $weight);
-        $weight->delete();
-
-        return response()->json([], 204);
+        return ['value' => 'sometimes|numeric|min:0.01|max:500', 'weighed_at' => 'sometimes|date'];
     }
 }

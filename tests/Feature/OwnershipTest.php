@@ -125,4 +125,15 @@ class OwnershipTest extends TestCase
         $this->postJson('/api/pets', ['name' => str_repeat('a', 256)])->assertUnprocessable();
         $this->postJson('/api/pets', ['name' => 'Future', 'date_of_birth' => now()->addDay()->toDateString()])->assertUnprocessable();
     }
+
+    public function test_explicit_null_date_uses_the_column_default(): void
+    {
+        $me = $this->user('me@test.dev');
+        $pet = Pet::create(['name' => 'Mine']);
+        $pet->users()->attach($me);
+        Sanctum::actingAs($me);
+
+        $this->postJson('/api/feedings', ['pet_id' => $pet->id, 'fed_at' => null])
+            ->assertCreated()->assertJsonPath('feed_check', true)->assertJsonPath('fed_at', fn ($v) => $v !== null);
+    }
 }

@@ -1,59 +1,30 @@
 <?php
 
-// app/Http/Controllers/BathController.php
-
 namespace App\Http\Controllers;
 
 use App\Models\Bath;
-use App\Http\Controllers\Concerns\AuthorizesPetAccess;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 
-class BathController extends Controller
+class BathController extends RecordController
 {
-    use AuthorizesPetAccess;
-
-    public function index(Request $request)
+    protected function model(): string
     {
-        $query = Bath::with(['pet', 'user'])->orderByDesc('bathed_at');
-        $this->scopeToUserPets($query, $request);
-
-        return $this->paginateRecords($query, $request, 'bathed_at');
+        return Bath::class;
     }
 
-    public function show(Request $request, Bath $bath)
+    protected function dateColumn(): string
     {
-        $this->authorizeRecord($request, $bath);
-        return $bath->load(['pet', 'user']);
+        return 'bathed_at';
     }
 
-    public function store(Request $request)
+    protected function storeRules(Request $request): array
     {
-        $data = $request->validate([
-            'pet_id' => $this->petIdRule($request),
-            'bathed_at' => 'nullable|date',
-        ]);
-        $data['user_id'] = $request->user()->id;
-        $bath = Bath::create($data);
-
-        return response()->json($bath->load(['pet', 'user']), 201);
+        return ['bathed_at' => 'nullable|date'];
     }
 
-    public function update(Request $request, Bath $bath)
+    protected function updateRules(Request $request, Model $record): array
     {
-        $this->authorizeRecord($request, $bath);
-        $data = $request->validate([
-            'bathed_at' => 'sometimes|date',
-        ]);
-        $bath->update($data);
-
-        return $bath->load(['pet', 'user']);
-    }
-
-    public function destroy(Request $request, Bath $bath)
-    {
-        $this->authorizeRecord($request, $bath);
-        $bath->delete();
-
-        return response()->json([], 204);
+        return ['bathed_at' => 'sometimes|date'];
     }
 }

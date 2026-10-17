@@ -1,61 +1,30 @@
 <?php
 
-// app/Http/Controllers/WalkController.php
-
 namespace App\Http\Controllers;
 
 use App\Models\Walk;
-use App\Http\Controllers\Concerns\AuthorizesPetAccess;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 
-class WalkController extends Controller
+class WalkController extends RecordController
 {
-    use AuthorizesPetAccess;
-
-    public function index(Request $request)
+    protected function model(): string
     {
-        $query = Walk::with(['pet', 'user'])->orderByDesc('walked_at');
-        $this->scopeToUserPets($query, $request);
-
-        return $this->paginateRecords($query, $request, 'walked_at');
+        return Walk::class;
     }
 
-    public function show(Request $request, Walk $walk)
+    protected function dateColumn(): string
     {
-        $this->authorizeRecord($request, $walk);
-        return $walk->load(['pet', 'user']);
+        return 'walked_at';
     }
 
-    public function store(Request $request)
+    protected function storeRules(Request $request): array
     {
-        $data = $request->validate([
-            'pet_id' => $this->petIdRule($request),
-            'walk_check' => 'sometimes|boolean',
-            'walked_at' => 'nullable|date',
-        ]);
-        $data['user_id'] = $request->user()->id;
-        $walk = Walk::create($data + ['walk_check' => $data['walk_check'] ?? true]);
-
-        return response()->json($walk->load(['pet', 'user']), 201);
+        return ['walk_check' => 'sometimes|boolean', 'walked_at' => 'nullable|date'];
     }
 
-    public function update(Request $request, Walk $walk)
+    protected function updateRules(Request $request, Model $record): array
     {
-        $this->authorizeRecord($request, $walk);
-        $data = $request->validate([
-            'walk_check' => 'sometimes|boolean',
-            'walked_at' => 'sometimes|date',
-        ]);
-        $walk->update($data);
-
-        return $walk->load(['pet', 'user']);
-    }
-
-    public function destroy(Request $request, Walk $walk)
-    {
-        $this->authorizeRecord($request, $walk);
-        $walk->delete();
-
-        return response()->json([], 204);
+        return ['walk_check' => 'sometimes|boolean', 'walked_at' => 'sometimes|date'];
     }
 }
