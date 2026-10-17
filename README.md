@@ -9,9 +9,11 @@ composer install
 cp .env.example .env
 php artisan key:generate
 touch database/database.sqlite   # default DB_CONNECTION=sqlite
-php artisan migrate --seed       # seeds sample users and a pet; see database/seeders
+php artisan migrate --seed       # seeds users from SEED_USER_* in .env, plus a sample pet
 php artisan serve --host=0.0.0.0 # http://localhost:8000/api
 ```
+
+Seeded users come from `SEED_USER_1_EMAIL`, `SEED_USER_1_PASSWORD`, ... in `.env` (see `.env.example`); no credentials are stored in the repo. A user without a password gets a random one printed once.
 
 Point the frontend at it with `EXPO_PUBLIC_API_URL` (see the frontend's `.env.example`).
 
