@@ -223,4 +223,37 @@ class OwnershipTest extends TestCase
             ->assertOk()->assertJsonPath('timezone', 'America/New_York');
         $this->patchJson("/api/v1/pets/$id", ['timezone' => 'Mars/Olympus'])->assertUnprocessable();
     }
+
+    public function test_bath_interval_defaults_to_30_and_is_validated(): void
+    {
+        $me = $this->user('me@test.dev');
+        Sanctum::actingAs($me);
+
+        $id = $this->postJson('/api/v1/pets', ['name' => 'Rex'])->assertCreated()
+            ->assertJsonPath('bath_interval_days', 30)->json('id');
+
+        $this->patchJson("/api/v1/pets/$id", ['bath_interval_days' => 14])
+            ->assertOk()->assertJsonPath('bath_interval_days', 14);
+        $this->getJson("/api/v1/pets/$id")->assertJsonPath('bath_interval_days', 14);
+
+        foreach ([0, -5, 366, 'soon', 1.5] as $bad) {
+            $this->patchJson("/api/v1/pets/$id", ['bath_interval_days' => $bad])
+                ->assertUnprocessable()->assertJsonValidationErrors('bath_interval_days');
+        }
+        $this->getJson("/api/v1/pets/$id")->assertJsonPath('bath_interval_days', 14);
+    }
+
+    public function test_a_co_owner_can_change_the_shared_bath_interval(): void
+    {
+        $me = $this->user('me@test.dev');
+        $other = $this->user('other@test.dev');
+        $pet = Pet::create(['name' => 'Shared']);
+        $pet->users()->attach([$me->id, $other->id]);
+
+        Sanctum::actingAs($other);
+        $this->patchJson("/api/v1/pets/{$pet->id}", ['bath_interval_days' => 45])->assertOk();
+
+        Sanctum::actingAs($me);
+        $this->getJson("/api/v1/pets/{$pet->id}")->assertJsonPath('bath_interval_days', 45);
+    }
 }

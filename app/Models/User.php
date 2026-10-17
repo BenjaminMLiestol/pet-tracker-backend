@@ -14,6 +14,12 @@ class User extends Authenticatable
 
     protected $fillable = [
         'email', 'password', 'date_of_birth', 'first_name', 'last_name',
+        'feeding_reminder_time', 'walk_reminder_time',
+    ];
+
+    protected $attributes = [
+        'feeding_reminder_time' => '18:00',
+        'walk_reminder_time' => '19:00',
     ];
 
     protected $hidden = ['password', 'remember_token'];

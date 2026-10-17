@@ -83,4 +83,40 @@ class AuthTest extends TestCase
         }
         $this->getJson('/api/v1/auth/me')->assertStatus(429);
     }
+
+    public function test_reminder_times_default_update_and_validate(): void
+    {
+        $token = $this->postJson('/api/v1/auth/register', [
+            'email' => 'a@b.test', 'password' => 'secret123', 'first_name' => 'A', 'last_name' => 'B',
+        ])->assertCreated()
+            ->assertJsonPath('user.feeding_reminder_time', '18:00')
+            ->assertJsonPath('user.walk_reminder_time', '19:00')
+            ->json('token');
+
+        $this->withToken($token)->patchJson('/api/v1/auth/me', [
+            'feeding_reminder_time' => '07:30', 'walk_reminder_time' => '21:05',
+        ])->assertOk()
+            ->assertJsonPath('feeding_reminder_time', '07:30')
+            ->assertJsonPath('walk_reminder_time', '21:05');
+
+        $this->withToken($token)->getJson('/api/v1/auth/me')
+            ->assertJsonPath('feeding_reminder_time', '07:30');
+
+        foreach (['25:00', '7:30', '18:60', 'evening', '18:00:00'] as $bad) {
+            $this->withToken($token)->patchJson('/api/v1/auth/me', ['walk_reminder_time' => $bad])
+                ->assertUnprocessable()->assertJsonValidationErrors('walk_reminder_time');
+        }
+    }
+
+    public function test_reminder_times_are_personal_to_each_user(): void
+    {
+        $a = User::create(['email' => 'a@b.test', 'password' => 'secret123', 'first_name' => 'A', 'last_name' => 'B']);
+        $b = User::create(['email' => 'c@d.test', 'password' => 'secret123', 'first_name' => 'C', 'last_name' => 'D']);
+
+        Sanctum::actingAs($a);
+        $this->patchJson('/api/v1/auth/me', ['feeding_reminder_time' => '06:00'])->assertOk();
+
+        Sanctum::actingAs($b);
+        $this->getJson('/api/v1/auth/me')->assertJsonPath('feeding_reminder_time', '18:00');
+    }
 }

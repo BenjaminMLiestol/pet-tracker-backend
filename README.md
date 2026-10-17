@@ -41,7 +41,7 @@ All routes are under `/api/v1`; everything except register/login needs `Authoriz
 | POST | `/auth/register` | `email, password (min 8), first_name, last_name, date_of_birth?` | `201 {user, token}` |
 | POST | `/auth/login` | `email, password` | `{user, token}`; `401` on bad credentials |
 | GET | `/auth/me` | | current user |
-| PATCH | `/auth/me` | any register field | update own account |
+| PATCH | `/auth/me` | any register field, `feeding_reminder_time?`, `walk_reminder_time?` | update own account. Reminder times are personal, 24h `HH:MM` (default `18:00` / `19:00`) |
 | DELETE | `/auth/me` | | delete own account and revoke tokens |
 | POST | `/auth/logout` | | revoke the current token |
 
@@ -49,7 +49,7 @@ All routes are under `/api/v1`; everything except register/login needs `Authoriz
 
 `GET|POST /pets`, `GET|PATCH|DELETE /pets/{id}`
 
-Fields: `name` (required), `breed?`, `timezone?` (IANA, default `Europe/Oslo`; decides where "today" starts), `date_of_birth?`, `user_ids?` (extra owners; you are always an owner). `age` is read-only, derived from `date_of_birth`. Deleting a pet also soft-deletes its records.
+Fields: `name` (required), `breed?`, `timezone?` (IANA, default `Europe/Oslo`; decides where "today" starts), `bath_interval_days?` (1-365, default 30; shared by all owners), `date_of_birth?`, `user_ids?` (extra owners; you are always an owner). `age` is read-only, derived from `date_of_birth`. Deleting a pet also soft-deletes its records.
 
 ### Per-pet records
 

@@ -63,6 +63,9 @@ class AuthController extends Controller
             'first_name' => ['sometimes', 'string', 'max:255'],
             'last_name' => ['sometimes', 'string', 'max:255'],
             'date_of_birth' => ['nullable', 'date', 'before_or_equal:today'],
+            // When to be reminded, 24h "HH:MM". Personal: co-owners can differ.
+            'feeding_reminder_time' => ['sometimes', 'date_format:H:i'],
+            'walk_reminder_time' => ['sometimes', 'date_format:H:i'],
         ]);
         if (isset($data['password'])) {
             $data['password'] = Hash::make($data['password']);
