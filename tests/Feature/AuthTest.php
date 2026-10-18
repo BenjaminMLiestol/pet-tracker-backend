@@ -183,4 +183,32 @@ class AuthTest extends TestCase
         $this->apiAs($first, 'GET', '/api/v1/auth/me')->assertUnauthorized();
         $this->apiAs($second, 'GET', '/api/v1/auth/me')->assertUnauthorized();
     }
+
+    public function test_confirming_a_password_accepts_the_right_one_and_rejects_the_wrong_one(): void
+    {
+        $token = $this->signIn();
+
+        $this->apiAs($token, 'POST', '/api/v1/auth/confirm-password')->assertUnprocessable();
+
+        $this->app['auth']->forgetGuards();
+        $this->withToken($token)->postJson('/api/v1/auth/confirm-password', ['password' => 'wrong-one'])
+            ->assertUnprocessable()->assertJsonValidationErrors('password');
+
+        $this->app['auth']->forgetGuards();
+        $this->withToken($token)->postJson('/api/v1/auth/confirm-password', ['password' => 'secret123'])
+            ->assertNoContent();
+    }
+
+    public function test_confirming_a_password_needs_a_login_and_is_throttled(): void
+    {
+        $this->postJson('/api/v1/auth/confirm-password', ['password' => 'x'])->assertUnauthorized();
+
+        $token = $this->signIn();
+        for ($i = 0; $i < 5; $i++) {
+            $this->app['auth']->forgetGuards();
+            $this->withToken($token)->postJson('/api/v1/auth/confirm-password', ['password' => 'wrong']);
+        }
+        $this->app['auth']->forgetGuards();
+        $this->withToken($token)->postJson('/api/v1/auth/confirm-password', ['password' => 'wrong'])->assertStatus(429);
+    }
 }

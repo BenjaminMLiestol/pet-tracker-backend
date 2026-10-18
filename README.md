@@ -50,6 +50,7 @@ All routes are under `/api/v1`; everything except register/login needs `Authoriz
 | PATCH | `/auth/me` | any register field, `feeding_reminder_time?`, `walk_reminder_time?` | update own account. Reminder times are personal, 24h `HH:MM` (default `18:00` / `19:00`) |
 | DELETE | `/auth/me` | | delete own account and revoke tokens |
 | POST | `/auth/refresh` | | `{user, token}`: swaps the current login for a fresh 7-day one. The old token works for 5 more minutes (so a lost reply doesn't sign anyone out) |
+| POST | `/auth/confirm-password` | `password` | `204` if it is the signed-in person's password, `422` if not (5/min). The app checks it before saving the login for Face ID |
 | POST | `/auth/logout` | | revoke the current token |
 | POST | `/auth/logout-all` | | revoke every token of this account (sign out everywhere) |
 

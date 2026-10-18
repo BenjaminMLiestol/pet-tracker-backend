@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
@@ -74,6 +75,18 @@ class AuthController extends Controller
         }
 
         return response()->json(['user' => $user, 'token' => $token]);
+    }
+
+    /** Checks the signed-in person's password (before saving it for Face ID login). */
+    public function confirmPassword(Request $request)
+    {
+        $data = $request->validate(['password' => ['required', 'string']]);
+
+        if (! Hash::check($data['password'], $request->user()->password)) {
+            throw ValidationException::withMessages(['password' => 'The password is incorrect.']);
+        }
+
+        return response()->json([], 204);
     }
 
     public function me(Request $request)

@@ -27,6 +27,7 @@ Route::prefix('v1')->group(function () {
         Route::patch('auth/me', [AuthController::class, 'update']);
         Route::delete('auth/me', [AuthController::class, 'destroy']);
         Route::post('auth/refresh', [AuthController::class, 'refresh']);
+        Route::post('auth/confirm-password', [AuthController::class, 'confirmPassword'])->middleware('throttle:auth');
         Route::post('auth/logout', [AuthController::class, 'logout']);
         Route::post('auth/logout-all', [AuthController::class, 'logoutAll']);
 
