@@ -88,6 +88,20 @@ Each supports `GET /x` (`?pet_id=`, `?since=`, `?per_page=`), `POST /x`, `GET|PA
 
 `next_*` dates may not fall on an earlier day than the visit/treatment date.
 
+## Medicines
+
+A dog can have medicines on a schedule, shared by all its owners (a dose ticked off by anyone counts for everyone).
+
+| Method | Path | Notes |
+| --- | --- | --- |
+| GET | `/medicines?pet_id=` | the dog's medicines, by name |
+| POST | `/medicines` | `pet_id, name, dose?, times[] (1-6 of "HH:MM"), interval_days? (1-365, default 1), starts_on? (default today), ends_on? (null = forever)`; at most 20 per dog |
+| PATCH | `/medicines/{id}` | any of the above; `ends_on: null` clears the end |
+| DELETE | `/medicines/{id}` | soft delete (also when the dog is deleted) |
+| GET | `/medicine-doses?pet_id=&since=` | doses given since a day (default 14 days back): `{id, medicine_id, for, slot, given_at, user_id}` |
+| PUT | `/medicines/{id}/doses` | `for` ("YYYY-MM-DD"), `slot` ("HH:MM"): tick a dose off. `201` when new, `200` with the existing one when already ticked. `422` unless the slot is one of the medicine's times and the day is a due day (every `interval_days` from `starts_on`, up to `ends_on`) within 7 days back and a day ahead |
+| DELETE | `/medicines/{id}/doses?for=&slot=` | take a tick back (nothing there is fine) |
+
 ## Entries sent twice (offline queue)
 
 `POST /feedings`, `/walks`, `/baths` and `/weights` accept an optional `client_id` (random string, up

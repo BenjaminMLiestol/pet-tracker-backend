@@ -12,7 +12,7 @@ class Pet extends Model
     use HasFactory, SoftDeletes;
 
     /** Relations whose records are soft-deleted together with the pet. */
-    private const CASCADE = ['feedings', 'walks', 'baths', 'weights', 'vetVisits', 'vaccinations', 'parasiteTreatments'];
+    private const CASCADE = ['feedings', 'walks', 'baths', 'weights', 'vetVisits', 'vaccinations', 'parasiteTreatments', 'medicines'];
 
     protected static function booted(): void
     {
@@ -65,6 +65,11 @@ class Pet extends Model
     public function scopeOwnedBy($query, User $user)
     {
         return $query->whereHas('users', fn ($q) => $q->where('users.id', $user->id));
+    }
+
+    public function medicines()
+    {
+        return $this->hasMany(Medicine::class);
     }
 
     public function invitations()

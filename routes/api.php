@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BathController;
 use App\Http\Controllers\DeviceTokenController;
 use App\Http\Controllers\FeedingController;
+use App\Http\Controllers\MedicineController;
 use App\Http\Controllers\ParasiteTreatmentController;
 use App\Http\Controllers\PetController;
 use App\Http\Controllers\PetInvitationController;
@@ -49,6 +50,12 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('walks', WalkController::class);
         Route::apiResource('baths', BathController::class);
         Route::apiResource('weights', WeightController::class);
+
+        // Medicines on a schedule, and the doses given
+        Route::apiResource('medicines', MedicineController::class)->except('show');
+        Route::get('medicine-doses', [MedicineController::class, 'doses']);
+        Route::put('medicines/{medicine}/doses', [MedicineController::class, 'give']);
+        Route::delete('medicines/{medicine}/doses', [MedicineController::class, 'undo']);
 
         // Care resources
         Route::apiResource('vet-visits', VetVisitController::class);
