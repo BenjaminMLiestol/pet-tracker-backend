@@ -30,6 +30,8 @@ class PetController extends Controller
             'breed' => 'nullable|string|max:255',
             'timezone' => 'sometimes|timezone:all',
             'bath_interval_days' => 'sometimes|integer|min:1|max:365',
+            'feedings_per_day' => 'sometimes|integer|min:1|max:10',
+            'walks_per_day' => 'sometimes|integer|min:1|max:10',
             'date_of_birth' => 'nullable|date|before_or_equal:today',
         ]);
         $pet = Pet::create($data);
@@ -48,6 +50,8 @@ class PetController extends Controller
             'breed' => 'sometimes|string|nullable|max:255',
             'timezone' => 'sometimes|timezone:all',
             'bath_interval_days' => 'sometimes|integer|min:1|max:365',
+            'feedings_per_day' => 'sometimes|integer|min:1|max:10',
+            'walks_per_day' => 'sometimes|integer|min:1|max:10',
             'date_of_birth' => 'nullable|date|before_or_equal:today',
         ]);
         $pet->update($data);

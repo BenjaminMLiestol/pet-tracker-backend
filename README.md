@@ -58,7 +58,7 @@ All routes are under `/api/v1`; everything except register/login needs `Authoriz
 
 `GET|POST /pets`, `GET|PATCH|DELETE /pets/{id}`
 
-Fields: `name` (required), `breed?`, `timezone?` (IANA, default `Europe/Oslo`; decides where "today" starts), `bath_interval_days?` (1-365, default 30; shared by all owners), `date_of_birth?`, You are the first owner; others join with an invitation code (below). `age` is read-only, derived from `date_of_birth`. Deleting a pet also soft-deletes its records.
+Fields: `name` (required), `breed?`, `timezone?` (IANA, default `Europe/Oslo`; decides where "today" starts), `bath_interval_days?` (1-365, default 30; shared by all owners), `feedings_per_day?` (1-10, default 1) and `walks_per_day?` (1-10, default 2): how many a day counts as done, shared by all owners, `date_of_birth?`, You are the first owner; others join with an invitation code (below). `age` is read-only, derived from `date_of_birth`. Deleting a pet also soft-deletes its records.
 
 ### Sharing a dog (co-owners)
 

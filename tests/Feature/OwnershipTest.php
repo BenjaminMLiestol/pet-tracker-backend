@@ -273,6 +273,27 @@ class OwnershipTest extends TestCase
         $this->getJson("/api/v1/pets/$id")->assertJsonPath('bath_interval_days', 14);
     }
 
+    public function test_daily_goals_default_to_one_feeding_and_two_walks_and_are_validated(): void
+    {
+        $me = $this->user('me@test.dev');
+        Sanctum::actingAs($me);
+
+        $id = $this->postJson('/api/v1/pets', ['name' => 'Goals'])->assertCreated()
+            ->assertJsonPath('feedings_per_day', 1)->assertJsonPath('walks_per_day', 2)->json('id');
+
+        $this->patchJson("/api/v1/pets/$id", ['feedings_per_day' => 3, 'walks_per_day' => 4])
+            ->assertOk()->assertJsonPath('feedings_per_day', 3)->assertJsonPath('walks_per_day', 4);
+        $this->getJson("/api/v1/pets/$id")->assertJsonPath('feedings_per_day', 3)->assertJsonPath('walks_per_day', 4);
+
+        foreach ([0, 11, -1, 1.5, 'abc'] as $bad) {
+            $this->patchJson("/api/v1/pets/$id", ['feedings_per_day' => $bad])
+                ->assertUnprocessable()->assertJsonValidationErrors('feedings_per_day');
+            $this->patchJson("/api/v1/pets/$id", ['walks_per_day' => $bad])
+                ->assertUnprocessable()->assertJsonValidationErrors('walks_per_day');
+        }
+        $this->getJson("/api/v1/pets/$id")->assertJsonPath('feedings_per_day', 3)->assertJsonPath('walks_per_day', 4);
+    }
+
     public function test_a_co_owner_can_change_the_shared_bath_interval(): void
     {
         $me = $this->user('me@test.dev');
