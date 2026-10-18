@@ -17,6 +17,9 @@ class PetResource extends JsonResource
             'bath_interval_days' => $this->bath_interval_days,
             'feedings_per_day' => $this->feedings_per_day,
             'walks_per_day' => $this->walks_per_day,
+            'food_bag_grams' => $this->food_bag_grams,
+            'food_daily_grams' => $this->food_daily_grams,
+            'food_started_on' => $this->food_started_on?->toDateString(),
             'date_of_birth' => $this->date_of_birth?->toDateString(),
             'age' => $this->age,
             // Co-owners are shown by name only; emails and birth dates stay private.

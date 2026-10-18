@@ -46,10 +46,14 @@ class Pet extends Model
         'bath_interval_days' => 'integer',
         'feedings_per_day' => 'integer',
         'walks_per_day' => 'integer',
+        'food_bag_grams' => 'integer',
+        'food_daily_grams' => 'integer',
+        'food_started_on' => 'date',
     ];
 
     protected $fillable = [
         'name', 'breed', 'timezone', 'bath_interval_days', 'feedings_per_day', 'walks_per_day', 'date_of_birth',
+        'food_bag_grams', 'food_daily_grams', 'food_started_on',
     ];
 
     /** Age in whole years, derived from date_of_birth. */

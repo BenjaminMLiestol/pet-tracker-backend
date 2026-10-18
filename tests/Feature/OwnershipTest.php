@@ -294,6 +294,38 @@ class OwnershipTest extends TestCase
         $this->getJson("/api/v1/pets/$id")->assertJsonPath('feedings_per_day', 3)->assertJsonPath('walks_per_day', 4);
     }
 
+    public function test_the_food_supply_is_optional_shared_and_validated(): void
+    {
+        $me = $this->user('me@test.dev');
+        $kari = $this->user('kari@test.dev');
+        Sanctum::actingAs($me);
+
+        $id = $this->postJson('/api/v1/pets', ['name' => 'Food'])->assertCreated()
+            ->assertJsonPath('food_bag_grams', null)->assertJsonPath('food_daily_grams', null)
+            ->assertJsonPath('food_started_on', null)->json('id');
+        Pet::find($id)->users()->attach($kari);
+
+        $today = now()->toDateString();
+        $this->patchJson("/api/v1/pets/$id", ['food_bag_grams' => 12000, 'food_daily_grams' => 300, 'food_started_on' => $today])
+            ->assertOk()->assertJsonPath('food_bag_grams', 12000)->assertJsonPath('food_daily_grams', 300)
+            ->assertJsonPath('food_started_on', $today);
+
+        // A co-owner sees it, and can start a new bag.
+        $this->app['auth']->forgetGuards();
+        Sanctum::actingAs($kari);
+        $this->getJson("/api/v1/pets/$id")->assertJsonPath('food_bag_grams', 12000);
+        $this->patchJson("/api/v1/pets/$id", ['food_started_on' => now()->subDay()->toDateString()])->assertOk();
+
+        foreach ([['food_bag_grams', 99], ['food_bag_grams', 100001], ['food_bag_grams', 'x'], ['food_daily_grams', 0],
+            ['food_daily_grams', 5001], ['food_started_on', 'not-a-date'], ['food_started_on', now()->addDays(3)->toDateString()]] as [$field, $bad]) {
+            $this->patchJson("/api/v1/pets/$id", [$field => $bad])->assertUnprocessable()->assertJsonValidationErrors($field);
+        }
+
+        // Clearing it removes the tracker.
+        $this->patchJson("/api/v1/pets/$id", ['food_bag_grams' => null, 'food_daily_grams' => null, 'food_started_on' => null])
+            ->assertOk()->assertJsonPath('food_bag_grams', null)->assertJsonPath('food_started_on', null);
+    }
+
     public function test_a_co_owner_can_change_the_shared_bath_interval(): void
     {
         $me = $this->user('me@test.dev');

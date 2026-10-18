@@ -32,6 +32,10 @@ class PetController extends Controller
             'bath_interval_days' => 'sometimes|integer|min:1|max:365',
             'feedings_per_day' => 'sometimes|integer|min:1|max:10',
             'walks_per_day' => 'sometimes|integer|min:1|max:10',
+            'food_bag_grams' => 'nullable|integer|min:100|max:100000',
+            'food_daily_grams' => 'nullable|integer|min:1|max:5000',
+            // Opened today at the latest; a day of slack for people in another timezone.
+            'food_started_on' => 'nullable|date|before_or_equal:tomorrow',
             'date_of_birth' => 'nullable|date|before_or_equal:today',
         ]);
         $pet = Pet::create($data);
@@ -52,6 +56,10 @@ class PetController extends Controller
             'bath_interval_days' => 'sometimes|integer|min:1|max:365',
             'feedings_per_day' => 'sometimes|integer|min:1|max:10',
             'walks_per_day' => 'sometimes|integer|min:1|max:10',
+            'food_bag_grams' => 'nullable|integer|min:100|max:100000',
+            'food_daily_grams' => 'nullable|integer|min:1|max:5000',
+            // Opened today at the latest; a day of slack for people in another timezone.
+            'food_started_on' => 'nullable|date|before_or_equal:tomorrow',
             'date_of_birth' => 'nullable|date|before_or_equal:today',
         ]);
         $pet->update($data);
