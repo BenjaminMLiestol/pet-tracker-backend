@@ -10,7 +10,7 @@ class Walk extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['walk_check', 'walked_at', 'pet_id', 'user_id'];
+    protected $fillable = ['walk_check', 'walked_at', 'pet_id', 'user_id', 'client_id'];
 
     protected $casts = ['walk_check' => 'boolean', 'walked_at' => 'datetime'];
 

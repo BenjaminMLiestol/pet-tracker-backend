@@ -10,7 +10,7 @@ class Feeding extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['feed_check', 'fed_at', 'pet_id', 'user_id'];
+    protected $fillable = ['feed_check', 'fed_at', 'pet_id', 'user_id', 'client_id'];
 
     protected $casts = ['feed_check' => 'boolean', 'fed_at' => 'datetime'];
 

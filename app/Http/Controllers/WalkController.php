@@ -14,6 +14,11 @@ class WalkController extends RecordController
         return Walk::class;
     }
 
+    protected function supportsClientId(): bool
+    {
+        return true;
+    }
+
     protected function dateColumn(): string
     {
         return 'walked_at';

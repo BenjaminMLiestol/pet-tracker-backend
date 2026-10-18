@@ -14,6 +14,11 @@ class FeedingController extends RecordController
         return Feeding::class;
     }
 
+    protected function supportsClientId(): bool
+    {
+        return true;
+    }
+
     protected function dateColumn(): string
     {
         return 'fed_at';

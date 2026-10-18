@@ -13,6 +13,11 @@ class BathController extends RecordController
         return Bath::class;
     }
 
+    protected function supportsClientId(): bool
+    {
+        return true;
+    }
+
     protected function dateColumn(): string
     {
         return 'bathed_at';

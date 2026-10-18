@@ -13,6 +13,11 @@ class WeightController extends RecordController
         return Weight::class;
     }
 
+    protected function supportsClientId(): bool
+    {
+        return true;
+    }
+
     protected function dateColumn(): string
     {
         return 'weighed_at';

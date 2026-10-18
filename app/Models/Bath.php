@@ -10,7 +10,7 @@ class Bath extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['bathed_at', 'pet_id', 'user_id'];
+    protected $fillable = ['bathed_at', 'pet_id', 'user_id', 'client_id'];
 
     protected $casts = ['bathed_at' => 'datetime'];
 

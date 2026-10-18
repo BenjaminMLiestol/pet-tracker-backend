@@ -10,7 +10,7 @@ class Weight extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['value', 'weighed_at', 'pet_id', 'user_id'];
+    protected $fillable = ['value', 'weighed_at', 'pet_id', 'user_id', 'client_id'];
 
     protected $casts = ['value' => 'float', 'weighed_at' => 'datetime'];
 

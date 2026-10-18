@@ -88,6 +88,14 @@ Each supports `GET /x` (`?pet_id=`, `?since=`, `?per_page=`), `POST /x`, `GET|PA
 
 `next_*` dates may not fall on an earlier day than the visit/treatment date.
 
+## Entries sent twice (offline queue)
+
+`POST /feedings`, `/walks`, `/baths` and `/weights` accept an optional `client_id` (random string, up
+to 64 characters). The app sets it on every entry so that a send repeated after a lost reply, or
+replayed from the offline queue, doesn't create a duplicate: the repeat answers `200` with the entry
+saved the first time (`201` for a new one). Ids are per person, and a deleted entry is not brought
+back by a stale retry. Repeats don't notify co-owners again.
+
 ## Push notifications
 
 Co-owners are told when someone logs a feeding or a walk ("Benjamin fed Toya"). The app sends
