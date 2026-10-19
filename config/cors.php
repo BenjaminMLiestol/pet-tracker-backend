@@ -2,7 +2,9 @@
 
 /*
  * CORS only matters for browser clients (the Expo web build); native apps ignore it.
- * Set CORS_ALLOWED_ORIGINS to a comma-separated list for deployed web builds.
+ * Any origin may call the API: every endpoint except login/register still needs a bearer token,
+ * and no cookies are used, so an open origin list adds no cross-site risk. Set
+ * CORS_ALLOWED_ORIGINS to a comma-separated list to restrict it.
  */
 return [
     'paths' => ['api/*'],
@@ -11,7 +13,7 @@ return [
 
     'allowed_origins' => array_filter(array_map(
         'trim',
-        explode(',', env('CORS_ALLOWED_ORIGINS', 'http://localhost:8081,http://localhost:19006'))
+        explode(',', env('CORS_ALLOWED_ORIGINS', '*'))
     )),
 
     'allowed_origins_patterns' => [],

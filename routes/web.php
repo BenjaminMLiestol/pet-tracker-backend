@@ -1,7 +1,3 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-
-Route::get('/', function () {
-    return view('welcome');
-});
+// API-only app: there are no web pages. Everything lives in routes/api.php under /api/v1.
