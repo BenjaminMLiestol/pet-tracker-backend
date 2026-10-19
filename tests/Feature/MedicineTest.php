@@ -8,6 +8,7 @@ use App\Models\Pet;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class MedicineTest extends TestCase
@@ -174,7 +175,7 @@ class MedicineTest extends TestCase
     }
 
     /** @dataProvider schedules */
-    #[\PHPUnit\Framework\Attributes\DataProvider('schedules')]
+    #[DataProvider('schedules')]
     public function test_which_days_a_medicine_is_due(int $interval, string $start, ?string $end, string $day, bool $due): void
     {
         $me = $this->user('me@test.dev');

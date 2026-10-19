@@ -7,6 +7,7 @@ use App\Models\Pet;
 use App\Models\PetInvitation;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -43,7 +44,7 @@ class PetInvitationTest extends TestCase
 
         $this->assertMatchesRegularExpression('/^['.PetInvitation::ALPHABET.']{8}$/', $invitation['code']);
         $this->assertStringNotContainsString('0', $invitation['code']);
-        $this->assertTrue(now()->addDays(6)->lt(\Illuminate\Support\Carbon::parse($invitation['expires_at'])));
+        $this->assertTrue(now()->addDays(6)->lt(Carbon::parse($invitation['expires_at'])));
         $this->getJson("/api/v1/pets/{$pet->id}/invitations")->assertOk()->assertJsonCount(1);
     }
 

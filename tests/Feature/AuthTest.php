@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Testing\TestResponse;
+use Laravel\Sanctum\PersonalAccessToken;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -121,7 +123,7 @@ class AuthTest extends TestCase
     }
 
     /** Calls the API with a real bearer token (Sanctum::actingAs would skip token expiry). */
-    private function apiAs(string $token, string $method, string $uri): \Illuminate\Testing\TestResponse
+    private function apiAs(string $token, string $method, string $uri): TestResponse
     {
         $this->app['auth']->forgetGuards(); // the guard remembers the previous request's user
 
@@ -139,7 +141,7 @@ class AuthTest extends TestCase
     {
         $token = $this->signIn();
 
-        $this->assertEquals(now()->addDays(7)->startOfMinute(), \Laravel\Sanctum\PersonalAccessToken::first()->expires_at->startOfMinute());
+        $this->assertEquals(now()->addDays(7)->startOfMinute(), PersonalAccessToken::first()->expires_at->startOfMinute());
 
         $this->travelTo(now()->addDays(7)->addMinute());
         $this->apiAs($token, 'GET', '/api/v1/auth/me')->assertUnauthorized();
